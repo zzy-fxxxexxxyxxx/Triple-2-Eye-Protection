@@ -1,0 +1,29 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.triple2.eyeprotection"
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.triple2.eyeprotection"
+        minSdk 26
+        targetSdk 33
+        versionCode 2
+        versionName "0.1.1"
+        setProperty("archivesBaseName", "Triple2EyeProtection-Android-${versionName}")
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+            minifyEnabled false
+        }
+    }
+}

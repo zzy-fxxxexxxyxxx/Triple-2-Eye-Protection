@@ -1,0 +1,40 @@
+# IDE and local workspace
+.idea/
+.vscode/
+*.iml
+Thumbs.db
+.DS_Store
+
+# Legacy experiments kept locally, not part of the maintained app
+Triple_2_Eyes_Protection_v1/
+eye_care_android_debug/
+
+# Archives and generated installers/APKs
+*.zip
+*.7z
+*.rar
+*.apk
+*.aab
+*.exe
+
+# Python runtime/build output
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.log
+Triple_2_Eyes_Protection_v2/build/
+Triple_2_Eyes_Protection_v2/dist/
+Triple_2_Eyes_Protection_v2/installer_output/
+Triple_2_Eyes_Protection_v2/error.log
+Triple_2_Eyes_Protection_v2/usage_logs/*.txt
+!Triple_2_Eyes_Protection_v2/usage_logs/.gitkeep
+
+# Android/Gradle local output
+Triple_2_Eyes_Protection_android/.gradle/
+Triple_2_Eyes_Protection_android/local.properties
+Triple_2_Eyes_Protection_android/**/build/
+
+# Local signing material
+*.jks
+*.keystore
+keystore.properties
