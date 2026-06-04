@@ -4,7 +4,6 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
-import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.widget.Button;
 
@@ -34,14 +33,13 @@ final class UiFeedback {
                         Color.WHITE
                 }
         ));
-        button.setHapticFeedbackEnabled(true);
+        button.setHapticFeedbackEnabled(false);
         button.setOnTouchListener((view, event) -> {
             if (!view.isEnabled()) {
                 return false;
             }
             int action = event.getActionMasked();
             if (action == MotionEvent.ACTION_DOWN) {
-                view.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
                 view.animate()
                         .scaleX(0.975f)
                         .scaleY(0.975f)
