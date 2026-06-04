@@ -44,6 +44,9 @@
 │   │   ├── RestActivity.java             # 休息提醒页
 │   │   └── UiFeedback.java               # 按钮点击反馈
 │   └── app/build.gradle                  # Android 版本号与构建配置
+├── releases/                             # 已归档的测试安装包和版本说明
+│   ├── android/
+│   └── windows/
 └── vision.txt                            # 原始需求与设计记录
 ```
 
@@ -74,7 +77,7 @@ pyinstaller "Triple 2 Eye Protection.spec" --noconfirm
 powershell -ExecutionPolicy Bypass -File installer\build_installer.ps1
 ```
 
-打包产物会生成在 `Triple_2_Eyes_Protection_v2/installer_output/`。该目录不提交到 Git，建议作为 GitHub Release 附件发布。
+打包产物会生成在 `Triple_2_Eyes_Protection_v2/installer_output/`。已确认发布的 Windows 安装包会按版本归档到 `releases/windows/`。
 
 ## Android 端运行与打包
 
@@ -115,8 +118,9 @@ Android 无法保证应用在所有系统策略下永久后台存活。华为 P6
 
 ## 设计原则
 
-- 不把运行日志、Windows 安装包、PyInstaller/Gradle 构建目录提交到源码仓库
+- 不把运行日志、PyInstaller/Gradle 构建目录提交到源码仓库
 - Android APK 会按版本归档到 `releases/android/`
+- Windows 安装包会按版本归档到 `releases/windows/`
 - Windows 端优先稳定托盘常驻、单实例、错误日志和可诊断性
 - Android 端优先使用系统认可的前台服务、通知、闹钟和开机广播路线
 - 每次发布递增版本号，避免覆盖安装和问题定位混乱

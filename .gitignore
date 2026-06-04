@@ -17,6 +17,7 @@ eye_care_android_debug/
 *.aab
 *.exe
 !releases/**/*.apk
+!releases/**/*.exe
 
 # Python runtime/build output
 **/__pycache__/
