@@ -9,7 +9,7 @@
 | 平台 | 版本 | 技术栈 | 状态 |
 | --- | --- | --- | --- |
 | Windows | `2.0.6` | Python 3.10, PyQt6, pywin32, PyInstaller, Inno Setup | 日常可用 |
-| Android | `0.1.1` | 原生 Android Java, Gradle | 测试版 |
+| Android | `0.1.2` | 原生 Android Java, Gradle | 测试版 |
 
 ## 功能概览
 
@@ -99,6 +99,8 @@ Triple_2_Eyes_Protection_android/app/build/outputs/apk/release/
 
 当前 `release` 变体仍使用 debug 签名，适合个人测试。正式分发前应改为独立 release keystore，并把签名配置放到本地未提交文件中。
 
+已归档的 Android 测试 APK 放在 `releases/android/`。每次发布新版 APK 时，需要递增 `versionCode` / `versionName`，并新增对应版本目录和说明。
+
 ## 华为手机保活建议
 
 Android 无法保证应用在所有系统策略下永久后台存活。华为 P60 上建议安装后完成这些设置：
@@ -113,7 +115,8 @@ Android 无法保证应用在所有系统策略下永久后台存活。华为 P6
 
 ## 设计原则
 
-- 不把运行日志、安装包、APK、PyInstaller/Gradle 构建目录提交到源码仓库
+- 不把运行日志、Windows 安装包、PyInstaller/Gradle 构建目录提交到源码仓库
+- Android APK 会按版本归档到 `releases/android/`
 - Windows 端优先稳定托盘常驻、单实例、错误日志和可诊断性
 - Android 端优先使用系统认可的前台服务、通知、闹钟和开机广播路线
 - 每次发布递增版本号，避免覆盖安装和问题定位混乱
