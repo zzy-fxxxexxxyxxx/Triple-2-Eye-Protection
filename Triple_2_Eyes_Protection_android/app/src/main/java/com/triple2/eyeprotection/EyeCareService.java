@@ -37,8 +37,10 @@ public class EyeCareService extends Service {
     public static final String EXTRA_REST_SECONDS = "rest_seconds";
     public static final String EXTRA_ENABLED = "enabled";
 
-    private static final String CHANNEL_ID = "eye_care_timer";
-    private static final int NOTIFICATION_ID = 2202;
+    private static final String STATUS_CHANNEL_ID = "eye_care_status_v2";
+    private static final String ALERT_CHANNEL_ID = "eye_care_rest_alerts_v1";
+    private static final int STATUS_NOTIFICATION_ID = 2202;
+    private static final int REST_ALERT_NOTIFICATION_ID = 2203;
     private static final int REQUEST_CONTENT = 10;
     private static final int REQUEST_PAUSE = 11;
     private static final int REQUEST_RESUME = 12;
@@ -46,6 +48,7 @@ public class EyeCareService extends Service {
     private static final int REQUEST_REST_NOW = 14;
     private static final int REQUEST_REST_DONE = 15;
     private static final int REQUEST_ALARM = 16;
+    private static final int REQUEST_REST_ACTIVITY = 17;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private BroadcastReceiver screenReceiver;
@@ -55,7 +58,7 @@ public class EyeCareService extends Service {
         public void run() {
             checkDue();
             publishStatus();
-            notifyNow(false);
+            updateStatusNotification();
             handler.postDelayed(this, 1000L);
         }
     };
@@ -63,14 +66,14 @@ public class EyeCareService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        createNotificationChannel();
+        createNotificationChannels();
         registerScreenReceiver();
         handler.post(tickRunnable);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        startForeground(NOTIFICATION_ID, buildNotification(false));
+        startForeground(STATUS_NOTIFICATION_ID, buildStatusNotification());
         acquireWakeLockBriefly();
 
         String action = intent == null ? ACTION_CHECK : intent.getAction();
@@ -79,7 +82,7 @@ public class EyeCareService extends Service {
         }
         handleAction(action);
         publishStatus();
-        notifyNow(false);
+        updateStatusNotification();
         return START_STICKY;
     }
 
@@ -102,6 +105,7 @@ public class EyeCareService extends Service {
     private void handleAction(String action) {
         long now = System.currentTimeMillis();
         if (ACTION_START.equals(action) || ACTION_RESET.equals(action)) {
+            cancelRestAlert();
             AppPrefs.startWorking(this, now);
             scheduleAlarm(AppPrefs.workEndAt(this));
             return;
@@ -115,6 +119,7 @@ public class EyeCareService extends Service {
         }
         if (ACTION_RESUME.equals(action)) {
             if (AppPrefs.STATE_PAUSED.equals(AppPrefs.state(this))) {
+                cancelRestAlert();
                 AppPrefs.resume(this, now);
                 scheduleAlarm(AppPrefs.workEndAt(this));
             }
@@ -123,6 +128,7 @@ public class EyeCareService extends Service {
         if (ACTION_STOP.equals(action)) {
             AppPrefs.stop(this);
             cancelAlarm();
+            cancelRestAlert();
             publishStatus();
             stopForeground(true);
             stopSelf();
@@ -136,6 +142,7 @@ public class EyeCareService extends Service {
             if (AppPrefs.STATE_RESTING.equals(AppPrefs.state(this))) {
                 UsageStore.record(this, UsageStore.TYPE_REST_DONE);
             }
+            cancelRestAlert();
             AppPrefs.startWorking(this, now);
             scheduleAlarm(AppPrefs.workEndAt(this));
             return;
@@ -179,7 +186,10 @@ public class EyeCareService extends Service {
         AppPrefs.startResting(this, now);
         UsageStore.record(this, UsageStore.TYPE_REST_STARTED);
         scheduleAlarm(AppPrefs.restEndAt(this));
-        notifyNow(alert);
+        updateStatusNotification();
+        if (alert) {
+            postRestAlert();
+        }
         vibrateForRest();
         showRestActivity();
     }
@@ -190,7 +200,7 @@ public class EyeCareService extends Service {
             AppPrefs.enterScreenOff(this, now, AppPrefs.remainingMs(this, now));
             cancelAlarm();
             publishStatus();
-            notifyNow(false);
+            updateStatusNotification();
         }
     }
 
@@ -204,13 +214,14 @@ public class EyeCareService extends Service {
         if (inactiveMs >= requiredRestMs) {
             UsageStore.record(this, UsageStore.TYPE_SCREEN_REST);
             UsageStore.record(this, UsageStore.TYPE_REST_DONE);
+            cancelRestAlert();
             AppPrefs.startWorking(this, now);
         } else {
             AppPrefs.resume(this, now);
         }
         scheduleAlarm(AppPrefs.workEndAt(this));
         publishStatus();
-        notifyNow(false);
+        updateStatusNotification();
     }
 
     private void rescheduleForCurrentState() {
@@ -224,7 +235,7 @@ public class EyeCareService extends Service {
         }
     }
 
-    private Notification buildNotification(boolean alertRest) {
+    private Notification buildStatusNotification() {
         long now = System.currentTimeMillis();
         String state = AppPrefs.state(this);
         long remaining = AppPrefs.remainingMs(this, now);
@@ -239,7 +250,7 @@ public class EyeCareService extends Service {
         );
 
         Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-                ? new Notification.Builder(this, CHANNEL_ID)
+                ? new Notification.Builder(this, STATUS_CHANNEL_ID)
                 : new Notification.Builder(this);
 
         builder.setSmallIcon(R.drawable.ic_stat_eye)
@@ -247,11 +258,11 @@ public class EyeCareService extends Service {
                 .setContentText(notificationText(state, remaining))
                 .setContentIntent(contentIntent)
                 .setOngoing(!AppPrefs.STATE_STOPPED.equals(state))
-                .setOnlyAlertOnce(!alertRest)
+                .setOnlyAlertOnce(true)
                 .setShowWhen(false);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            builder.setPriority(Notification.PRIORITY_HIGH);
+            builder.setPriority(Notification.PRIORITY_LOW);
         }
 
         if (AppPrefs.STATE_RESTING.equals(state)) {
@@ -259,14 +270,12 @@ public class EyeCareService extends Service {
             restIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             PendingIntent restPendingIntent = PendingIntent.getActivity(
                     this,
-                    REQUEST_REST_DONE,
+                    REQUEST_REST_ACTIVITY,
                     restIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
             builder.setContentIntent(restPendingIntent)
                     .setCategory(Notification.CATEGORY_ALARM)
-                    .setPriority(Notification.PRIORITY_MAX)
-                    .setFullScreenIntent(restPendingIntent, alertRest)
                     .addAction(R.drawable.ic_stat_eye, "休息好了", serviceIntent(ACTION_REST_DONE, REQUEST_REST_DONE));
         } else {
             if (AppPrefs.STATE_PAUSED.equals(state)) {
@@ -277,6 +286,36 @@ public class EyeCareService extends Service {
             builder.addAction(R.drawable.ic_stat_eye, "重置", serviceIntent(ACTION_RESET, REQUEST_RESET));
             builder.addAction(R.drawable.ic_stat_eye, "立即休息", serviceIntent(ACTION_REST_NOW, REQUEST_REST_NOW));
         }
+
+        return builder.build();
+    }
+
+    private Notification buildRestAlertNotification() {
+        Intent restIntent = new Intent(this, RestActivity.class);
+        restIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent restPendingIntent = PendingIntent.getActivity(
+                this,
+                REQUEST_REST_ACTIVITY,
+                restIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                ? new Notification.Builder(this, ALERT_CHANNEL_ID)
+                : new Notification.Builder(this);
+
+        builder.setSmallIcon(R.drawable.ic_stat_eye)
+                .setContentTitle("休息时间到了")
+                .setContentText("请离开屏幕，远望 6 米外")
+                .setContentIntent(restPendingIntent)
+                .setCategory(Notification.CATEGORY_ALARM)
+                .setPriority(Notification.PRIORITY_MAX)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setOnlyAlertOnce(false)
+                .setFullScreenIntent(restPendingIntent, true)
+                .addAction(R.drawable.ic_stat_eye, "休息好了", serviceIntent(ACTION_REST_DONE, REQUEST_REST_DONE));
 
         return builder.build();
     }
@@ -312,10 +351,24 @@ public class EyeCareService extends Service {
         sendBroadcast(status);
     }
 
-    private void notifyNow(boolean alertRest) {
+    private void updateStatusNotification() {
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) {
-            manager.notify(NOTIFICATION_ID, buildNotification(alertRest));
+            manager.notify(STATUS_NOTIFICATION_ID, buildStatusNotification());
+        }
+    }
+
+    private void postRestAlert() {
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.notify(REST_ALERT_NOTIFICATION_ID, buildRestAlertNotification());
+        }
+    }
+
+    private void cancelRestAlert() {
+        NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel(REST_ALERT_NOTIFICATION_ID);
         }
     }
 
@@ -364,20 +417,31 @@ public class EyeCareService extends Service {
         }
     }
 
-    private void createNotificationChannel() {
+    private void createNotificationChannels() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return;
         }
-        NotificationChannel channel = new NotificationChannel(
-                CHANNEL_ID,
+        NotificationChannel statusChannel = new NotificationChannel(
+                STATUS_CHANNEL_ID,
                 "护眼倒计时",
+                NotificationManager.IMPORTANCE_LOW
+        );
+        statusChannel.setDescription("显示护眼倒计时常驻通知");
+        statusChannel.enableVibration(false);
+
+        NotificationChannel alertChannel = new NotificationChannel(
+                ALERT_CHANNEL_ID,
+                "休息全屏提醒",
                 NotificationManager.IMPORTANCE_HIGH
         );
-        channel.setDescription("显示护眼倒计时和休息提醒");
-        channel.enableVibration(true);
+        alertChannel.setDescription("到点时弹出全屏休息提醒");
+        alertChannel.enableVibration(true);
+        alertChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         if (manager != null) {
-            manager.createNotificationChannel(channel);
+            manager.createNotificationChannel(statusChannel);
+            manager.createNotificationChannel(alertChannel);
         }
     }
 

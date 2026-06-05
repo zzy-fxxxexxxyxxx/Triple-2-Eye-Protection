@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -241,6 +242,7 @@ public class MainActivity extends Activity {
         String[] items = new String[]{
                 "请求忽略电池优化",
                 "打开精确闹钟权限",
+                "打开全屏提醒权限",
                 "打开华为应用启动管理",
                 "打开本应用详情"
         };
@@ -253,6 +255,8 @@ public class MainActivity extends Activity {
                     } else if (which == 1) {
                         requestExactAlarmPermission();
                     } else if (which == 2) {
+                        requestFullScreenIntentPermission();
+                    } else if (which == 3) {
                         openHuaweiStartupManager();
                     } else {
                         openAppDetails();
@@ -295,6 +299,36 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
         intent.setData(Uri.parse("package:" + getPackageName()));
         startSafely(intent);
+    }
+
+    private void requestFullScreenIntentPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            if (manager != null && manager.canUseFullScreenIntent()) {
+                Toast.makeText(this, "全屏提醒权限已允许", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Intent intent = new Intent(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+            if (startSafely(intent)) {
+                return;
+            }
+        }
+        openAppNotificationSettings();
+    }
+
+    private void openAppNotificationSettings() {
+        Intent intent;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            intent = new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS);
+            intent.putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+        } else {
+            intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+            intent.setData(Uri.parse("package:" + getPackageName()));
+        }
+        if (!startSafely(intent)) {
+            openAppDetails();
+        }
     }
 
     private void openHuaweiStartupManager() {
