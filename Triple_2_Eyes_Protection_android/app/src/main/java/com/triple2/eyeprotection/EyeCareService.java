@@ -174,9 +174,7 @@ public class EyeCareService extends Service {
         if (ACTION_CHECK.equals(action)) {
             checkDue();
             if (AppPrefs.STATE_RESTING.equals(AppPrefs.state(this))) {
-                postRestAlert();
-                showRestActivity();
-                showRestOverlay();
+                showRestReminder();
             }
             rescheduleForCurrentState();
         }
@@ -212,11 +210,13 @@ public class EyeCareService extends Service {
         UsageStore.record(this, UsageStore.TYPE_REST_STARTED);
         scheduleAlarm(AppPrefs.restEndAt(this));
         updateStatusNotification();
-        if (alert) {
+        if (canShowOverlay()) {
+            showRestOverlay();
+        } else if (alert) {
             postRestAlert();
+            showRestActivity();
         }
         vibrateForRest();
-        showRestActivity();
     }
 
     private void onScreenOff() {
@@ -477,6 +477,15 @@ public class EyeCareService extends Service {
             updateRestOverlay();
         } else {
             hideRestOverlay();
+        }
+    }
+
+    private void showRestReminder() {
+        if (canShowOverlay()) {
+            showRestOverlay();
+        } else {
+            postRestAlert();
+            showRestActivity();
         }
     }
 

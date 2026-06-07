@@ -112,10 +112,10 @@ public class MainActivity extends Activity {
 
         LinearLayout settingsCard = card();
         settingsCard.addView(label("设置", 18, true));
-        workMinutesEdit = numberEdit("用眼时长（分钟）");
-        restSecondsEdit = numberEdit("休息时长（秒）");
-        settingsCard.addView(workMinutesEdit);
-        settingsCard.addView(restSecondsEdit);
+        workMinutesEdit = numberEdit("20");
+        restSecondsEdit = numberEdit("20");
+        settingsCard.addView(durationRow("用眼时间：", workMinutesEdit, "分钟"));
+        settingsCard.addView(durationRow("休息时间：", restSecondsEdit, "秒"));
 
         Button saveButton = button("保存设置");
         saveButton.setOnClickListener(v -> {
@@ -428,6 +428,30 @@ public class MainActivity extends Activity {
         editText.setHintTextColor(Color.rgb(118, 132, 125));
         editText.setPadding(0, dp(8), 0, dp(8));
         return editText;
+    }
+
+    private LinearLayout durationRow(String labelText, EditText editText, String unitText) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, dp(4), 0, dp(4));
+
+        TextView name = new TextView(this);
+        name.setText(labelText);
+        name.setTextColor(TEXT);
+        name.setTextSize(15);
+        row.addView(name, new LinearLayout.LayoutParams(dp(92), LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        row.addView(editText, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView unit = new TextView(this);
+        unit.setText(unitText);
+        unit.setTextColor(Color.rgb(88, 103, 96));
+        unit.setTextSize(15);
+        unit.setGravity(Gravity.END);
+        row.addView(unit, new LinearLayout.LayoutParams(dp(44), LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        return row;
     }
 
     private Button button(String text) {

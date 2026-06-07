@@ -1,5 +1,16 @@
 # Android APK Changelog
 
+## 0.1.5 - 2026-06-07
+
+- 修复点击悬浮覆盖层“休息好了”后回到 Triple 2 Eye Protection 主界面的问题。
+- 当悬浮窗权限可用时，休息提醒只显示服务层覆盖层，不再额外启动 `RestActivity`，关闭后会自然回到弹出前的界面。
+- 优化设置区输入框，明确显示“用眼时间：... 分钟”和“休息时间：... 秒”。
+- 版本号递增到 `versionCode 6` / `versionName 0.1.5`，可覆盖安装 `0.1.4`。
+
+APK:
+
+- `releases/android/0.1.5/Triple2EyeProtection-Android-0.1.5-release.apk`
+
 ## 0.1.4 - 2026-06-07
 
 - 修复华为手机后台到点仍无法弹出休息页的问题。
