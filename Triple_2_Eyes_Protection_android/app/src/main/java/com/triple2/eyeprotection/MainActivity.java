@@ -171,7 +171,7 @@ public class MainActivity extends Activity {
 
         LinearLayout keepAliveCard = card();
         keepAliveCard.addView(label("华为保活", 18, true));
-        TextView keepAliveText = label("建议开启：允许通知、忽略电池优化、应用启动管理中允许自启动/关联启动/后台活动，并在多任务界面锁定应用。", 14, false);
+        TextView keepAliveText = label("建议开启：允许通知、全屏提醒、悬浮窗/显示在其他应用上层、忽略电池优化、应用启动管理中允许自启动/关联启动/后台活动，并在多任务界面锁定应用。", 14, false);
         keepAliveText.setTextColor(Color.rgb(88, 103, 96));
         keepAliveCard.addView(keepAliveText);
 
@@ -243,6 +243,7 @@ public class MainActivity extends Activity {
                 "请求忽略电池优化",
                 "打开精确闹钟权限",
                 "打开全屏提醒权限",
+                "打开悬浮窗权限",
                 "打开华为应用启动管理",
                 "打开本应用详情"
         };
@@ -257,6 +258,8 @@ public class MainActivity extends Activity {
                     } else if (which == 2) {
                         requestFullScreenIntentPermission();
                     } else if (which == 3) {
+                        requestOverlayPermission();
+                    } else if (which == 4) {
                         openHuaweiStartupManager();
                     } else {
                         openAppDetails();
@@ -315,6 +318,22 @@ public class MainActivity extends Activity {
             }
         }
         openAppNotificationSettings();
+    }
+
+    private void requestOverlayPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            Toast.makeText(this, "当前系统不需要单独开启悬浮窗权限", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "悬浮窗权限已允许", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        if (!startSafely(intent)) {
+            openAppDetails();
+        }
     }
 
     private void openAppNotificationSettings() {

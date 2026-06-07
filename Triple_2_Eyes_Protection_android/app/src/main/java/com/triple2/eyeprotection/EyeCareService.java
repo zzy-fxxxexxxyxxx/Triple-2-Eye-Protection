@@ -10,6 +10,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
+import android.graphics.PixelFormat;
+import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -17,6 +20,13 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.provider.Settings;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class EyeCareService extends Service {
     public static final String ACTION_START = "com.triple2.eyeprotection.START";
@@ -49,14 +59,20 @@ public class EyeCareService extends Service {
     private static final int REQUEST_REST_DONE = 15;
     private static final int REQUEST_ALARM = 16;
     private static final int REQUEST_REST_ACTIVITY = 17;
+    private static final int PRIMARY = Color.rgb(31, 122, 77);
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private BroadcastReceiver screenReceiver;
+    private WindowManager windowManager;
+    private View restOverlayView;
+    private TextView overlayCountdownText;
+    private TextView overlayMessageText;
 
     private final Runnable tickRunnable = new Runnable() {
         @Override
         public void run() {
             checkDue();
+            syncRestOverlay();
             publishStatus();
             updateStatusNotification();
             handler.postDelayed(this, 1000L);
@@ -90,6 +106,7 @@ public class EyeCareService extends Service {
     public void onDestroy() {
         handler.removeCallbacks(tickRunnable);
         cancelAlarm();
+        hideRestOverlay();
         if (screenReceiver != null) {
             unregisterReceiver(screenReceiver);
             screenReceiver = null;
@@ -106,6 +123,7 @@ public class EyeCareService extends Service {
         long now = System.currentTimeMillis();
         if (ACTION_START.equals(action) || ACTION_RESET.equals(action)) {
             cancelRestAlert();
+            hideRestOverlay();
             AppPrefs.startWorking(this, now);
             scheduleAlarm(AppPrefs.workEndAt(this));
             return;
@@ -129,6 +147,7 @@ public class EyeCareService extends Service {
             AppPrefs.stop(this);
             cancelAlarm();
             cancelRestAlert();
+            hideRestOverlay();
             publishStatus();
             stopForeground(true);
             stopSelf();
@@ -143,6 +162,7 @@ public class EyeCareService extends Service {
                 UsageStore.record(this, UsageStore.TYPE_REST_DONE);
             }
             cancelRestAlert();
+            hideRestOverlay();
             AppPrefs.startWorking(this, now);
             scheduleAlarm(AppPrefs.workEndAt(this));
             return;
@@ -153,6 +173,11 @@ public class EyeCareService extends Service {
         }
         if (ACTION_CHECK.equals(action)) {
             checkDue();
+            if (AppPrefs.STATE_RESTING.equals(AppPrefs.state(this))) {
+                postRestAlert();
+                showRestActivity();
+                showRestOverlay();
+            }
             rescheduleForCurrentState();
         }
     }
@@ -221,6 +246,7 @@ public class EyeCareService extends Service {
         }
         scheduleAlarm(AppPrefs.workEndAt(this));
         publishStatus();
+        hideRestOverlay();
         updateStatusNotification();
     }
 
@@ -445,6 +471,15 @@ public class EyeCareService extends Service {
         }
     }
 
+    private void syncRestOverlay() {
+        if (AppPrefs.STATE_RESTING.equals(AppPrefs.state(this))) {
+            showRestOverlay();
+            updateRestOverlay();
+        } else {
+            hideRestOverlay();
+        }
+    }
+
     private void registerScreenReceiver() {
         screenReceiver = new BroadcastReceiver() {
             @Override
@@ -478,6 +513,139 @@ public class EyeCareService extends Service {
         }
     }
 
+    private void showRestOverlay() {
+        if (!canShowOverlay()) {
+            return;
+        }
+        if (restOverlayView != null) {
+            updateRestOverlay();
+            return;
+        }
+        if (windowManager == null) {
+            windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        }
+        if (windowManager == null) {
+            return;
+        }
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setGravity(Gravity.CENTER_HORIZONTAL);
+        root.setPadding(dp(24), dp(54), dp(24), dp(40));
+        root.setBackgroundColor(Color.rgb(240, 255, 245));
+
+        TextView title = new TextView(this);
+        title.setText("休息时间到了");
+        title.setTextColor(PRIMARY);
+        title.setTextSize(30);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setGravity(Gravity.CENTER);
+        root.addView(title, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+
+        overlayMessageText = new TextView(this);
+        overlayMessageText.setText("请离开屏幕，远望 6 米外");
+        overlayMessageText.setTextColor(Color.rgb(54, 74, 64));
+        overlayMessageText.setTextSize(18);
+        overlayMessageText.setGravity(Gravity.CENTER);
+        overlayMessageText.setPadding(0, dp(24), 0, dp(18));
+        root.addView(overlayMessageText, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+
+        overlayCountdownText = new TextView(this);
+        overlayCountdownText.setText("00:00");
+        overlayCountdownText.setTextColor(PRIMARY);
+        overlayCountdownText.setTextSize(64);
+        overlayCountdownText.setTypeface(Typeface.MONOSPACE, Typeface.BOLD);
+        overlayCountdownText.setGravity(Gravity.CENTER);
+        root.addView(overlayCountdownText, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+
+        Button doneButton = new Button(this);
+        doneButton.setText("休息好了");
+        UiFeedback.applyButtonFeedback(doneButton, PRIMARY, dp(8));
+        doneButton.setOnClickListener(v -> {
+            handleAction(ACTION_REST_DONE);
+            publishStatus();
+            updateStatusNotification();
+        });
+        LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dp(54)
+        );
+        buttonParams.setMargins(0, dp(38), 0, 0);
+        root.addView(doneButton, buttonParams);
+
+        int overlayType = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                : WindowManager.LayoutParams.TYPE_PHONE;
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(
+                WindowManager.LayoutParams.MATCH_PARENT,
+                WindowManager.LayoutParams.MATCH_PARENT,
+                overlayType,
+                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                        | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                PixelFormat.TRANSLUCENT
+        );
+        params.gravity = Gravity.CENTER;
+        params.setTitle("Triple 2 Eye Protection Rest Overlay");
+
+        try {
+            windowManager.addView(root, params);
+            restOverlayView = root;
+            updateRestOverlay();
+        } catch (RuntimeException ignored) {
+            restOverlayView = null;
+            overlayCountdownText = null;
+            overlayMessageText = null;
+        }
+    }
+
+    private void updateRestOverlay() {
+        if (restOverlayView == null || overlayCountdownText == null || overlayMessageText == null) {
+            return;
+        }
+        String state = AppPrefs.state(this);
+        if (!AppPrefs.STATE_RESTING.equals(state)) {
+            hideRestOverlay();
+            return;
+        }
+        long remaining = AppPrefs.remainingMs(this, System.currentTimeMillis());
+        overlayCountdownText.setText(AppPrefs.formatRemaining(remaining));
+        if (remaining <= 0L) {
+            overlayMessageText.setText("休息时间已到，可以开始下一轮");
+        } else {
+            overlayMessageText.setText("请离开屏幕，远望 6 米外");
+        }
+    }
+
+    private void hideRestOverlay() {
+        if (restOverlayView == null || windowManager == null) {
+            restOverlayView = null;
+            overlayCountdownText = null;
+            overlayMessageText = null;
+            return;
+        }
+        try {
+            windowManager.removeView(restOverlayView);
+        } catch (RuntimeException ignored) {
+            // The overlay may already have been removed by the system.
+        }
+        restOverlayView = null;
+        overlayCountdownText = null;
+        overlayMessageText = null;
+    }
+
+    private boolean canShowOverlay() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+    }
+
     private void vibrateForRest() {
         Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         if (vibrator == null || !vibrator.hasVibrator()) {
@@ -489,6 +657,10 @@ public class EyeCareService extends Service {
         } else {
             vibrator.vibrate(pattern, -1);
         }
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
     private void acquireWakeLockBriefly() {
