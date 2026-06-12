@@ -10,8 +10,8 @@ android {
         applicationId "com.triple2.eyeprotection"
         minSdk 26
         targetSdk 33
-        versionCode 7
-        versionName "0.1.6"
+        versionCode 8
+        versionName "0.1.7"
         setProperty("archivesBaseName", "Triple2EyeProtection-Android-${versionName}")
     }
 

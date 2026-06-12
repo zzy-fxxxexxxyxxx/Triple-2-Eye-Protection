@@ -1,5 +1,16 @@
 # Android APK Changelog
 
+## 0.1.7 - 2026-06-12
+
+- Added a `休息时震动` switch in the Control section.
+- Rest reminder vibration is now optional and defaults to off for new or unset installations.
+- The switch saves immediately when toggled, and the service checks the saved option before vibrating.
+- Bumped Android version to `versionCode 8` / `versionName 0.1.7`.
+
+APK:
+
+- `releases/android/0.1.7/Triple2EyeProtection-Android-0.1.7-release.apk`
+
 ## 0.1.6 - 2026-06-12
 
 - Added a configurable fade-in duration for the rest reminder in the Control section.

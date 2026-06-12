@@ -16,6 +16,7 @@ final class AppPrefs {
     private static final String KEY_WORK_MINUTES = "work_minutes";
     private static final String KEY_REST_SECONDS = "rest_seconds";
     private static final String KEY_FADE_SECONDS = "fade_seconds";
+    private static final String KEY_VIBRATE_ON_REST = "vibrate_on_rest";
     private static final String KEY_STATE = "state";
     private static final String KEY_WORK_END_AT = "work_end_at";
     private static final String KEY_REST_END_AT = "rest_end_at";
@@ -49,11 +50,20 @@ final class AppPrefs {
         return clampFadeSeconds(prefs(context).getFloat(KEY_FADE_SECONDS, 1.2f));
     }
 
-    static void setDurations(Context context, int workMinutes, int restSeconds, float fadeSeconds) {
+    static boolean vibrateOnRest(Context context) {
+        return prefs(context).getBoolean(KEY_VIBRATE_ON_REST, false);
+    }
+
+    static void setVibrateOnRest(Context context, boolean vibrateOnRest) {
+        prefs(context).edit().putBoolean(KEY_VIBRATE_ON_REST, vibrateOnRest).apply();
+    }
+
+    static void setDurations(Context context, int workMinutes, int restSeconds, float fadeSeconds, boolean vibrateOnRest) {
         prefs(context).edit()
                 .putInt(KEY_WORK_MINUTES, Math.max(1, workMinutes))
                 .putInt(KEY_REST_SECONDS, Math.max(1, restSeconds))
                 .putFloat(KEY_FADE_SECONDS, clampFadeSeconds(fadeSeconds))
+                .putBoolean(KEY_VIBRATE_ON_REST, vibrateOnRest)
                 .apply();
     }
 

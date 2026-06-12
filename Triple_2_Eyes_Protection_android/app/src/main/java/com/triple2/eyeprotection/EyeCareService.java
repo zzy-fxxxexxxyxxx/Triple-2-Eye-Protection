@@ -672,6 +672,9 @@ public class EyeCareService extends Service {
     }
 
     private void vibrateForRest() {
+        if (!AppPrefs.vibrateOnRest(this)) {
+            return;
+        }
         Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         if (vibrator == null || !vibrator.hasVibrator()) {
             return;

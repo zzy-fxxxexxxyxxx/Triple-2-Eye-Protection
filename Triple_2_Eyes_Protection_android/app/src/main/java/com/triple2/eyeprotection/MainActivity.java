@@ -26,6 +26,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +42,7 @@ public class MainActivity extends Activity {
     private EditText workMinutesEdit;
     private EditText restSecondsEdit;
     private EditText fadeSecondsEdit;
+    private Switch vibrateSwitch;
     private Button pauseButton;
     private Button startButton;
 
@@ -132,6 +134,13 @@ public class MainActivity extends Activity {
         actionsCard.addView(label("控制", 18, true));
         fadeSecondsEdit = decimalEdit("1.200");
         actionsCard.addView(durationRow("过渡时间：", fadeSecondsEdit, "s"));
+        vibrateSwitch = new Switch(this);
+        vibrateSwitch.setText("休息时震动");
+        vibrateSwitch.setTextColor(TEXT);
+        vibrateSwitch.setTextSize(15);
+        vibrateSwitch.setPadding(0, dp(4), 0, dp(8));
+        vibrateSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> AppPrefs.setVibrateOnRest(this, isChecked));
+        actionsCard.addView(vibrateSwitch);
 
         startButton = button("开启护眼");
         startButton.setOnClickListener(v -> {
@@ -213,6 +222,7 @@ public class MainActivity extends Activity {
         if (!fadeSecondsEdit.hasFocus()) {
             fadeSecondsEdit.setText(formatFadeSeconds(AppPrefs.fadeSeconds(this)));
         }
+        vibrateSwitch.setChecked(AppPrefs.vibrateOnRest(this));
 
         pauseButton.setEnabled(AppPrefs.STATE_WORKING.equals(state) || AppPrefs.STATE_PAUSED.equals(state));
         pauseButton.setText(AppPrefs.STATE_PAUSED.equals(state) ? "继续" : "暂停");
@@ -224,6 +234,7 @@ public class MainActivity extends Activity {
             int workMinutes = Integer.parseInt(workMinutesEdit.getText().toString().trim());
             int restSeconds = Integer.parseInt(restSecondsEdit.getText().toString().trim());
             float fadeSeconds = Float.parseFloat(fadeSecondsEdit.getText().toString().trim());
+            boolean vibrateOnRest = vibrateSwitch.isChecked();
             if (workMinutes <= 0 || restSeconds <= 0) {
                 Toast.makeText(this, "时间必须大于 0", Toast.LENGTH_SHORT).show();
                 return false;
@@ -232,7 +243,7 @@ public class MainActivity extends Activity {
                 Toast.makeText(this, "过渡时间范围是 0 到 10 秒", Toast.LENGTH_SHORT).show();
                 return false;
             }
-            AppPrefs.setDurations(this, workMinutes, restSeconds, fadeSeconds);
+            AppPrefs.setDurations(this, workMinutes, restSeconds, fadeSeconds, vibrateOnRest);
             return true;
         } catch (NumberFormatException e) {
             Toast.makeText(this, "请输入有效数字", Toast.LENGTH_SHORT).show();
