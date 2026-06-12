@@ -5,7 +5,7 @@ import time
 import traceback
 
 
-APP_VERSION = "2.0.6"
+APP_VERSION = "2.0.7"
 main_window = None
 single_instance_mutex = None
 SINGLE_INSTANCE_MUTEX_NAME = "Local\\Triple2EyeProtectionSingleInstance"
@@ -31,6 +31,7 @@ def collect_app_state():
         ("t1_mins", "t1_mins"),
         ("t2_secs", "t2_secs"),
         ("remind_mode", "remind_mode"),
+        ("fade_secs", "fade_secs"),
         ("is_paused", "is_paused"),
         ("is_locked", "is_locked"),
         ("start_time", "start_time"),

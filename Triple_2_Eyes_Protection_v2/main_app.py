@@ -11,7 +11,7 @@ import winreg
 
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QWidget,
-                             QVBoxLayout, QHBoxLayout, QLabel, QSpinBox,
+                             QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QDoubleSpinBox,
                              QPushButton, QStyle, QFrame, QComboBox, QCheckBox,
                              QMessageBox, QDialog, QLineEdit)
 from PyQt6.QtCore import QTimer, Qt
@@ -63,7 +63,7 @@ class EyeCarePro(QWidget):
 
         # <<< 改进 1: 将配置加载/保存的逻辑封装，而不是直接操作变量 >>>
         # 这样做让代码更清晰，将“数据”和“状态”分离。
-        self.t1_mins, self.t2_secs, self.remind_mode = self.load_settings()
+        self.t1_mins, self.t2_secs, self.remind_mode, self.fade_secs = self.load_settings()
 
         # 核心状态变量
         self.start_time = time.time()
@@ -112,12 +112,17 @@ class EyeCarePro(QWidget):
                 with open(self.config_path, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     # 使用 .get() 提供默认值，防止 JSON 文件中缺少某个键
-                    return data.get("t1", 20), data.get("t2", 20), data.get("mode", 0)
+                    return (
+                        data.get("t1", 20),
+                        data.get("t2", 20),
+                        data.get("mode", 0),
+                        float(data.get("fade_secs", 1.2)),
+                    )
             except (json.JSONDecodeError, IOError) as e:
                 # 如果文件损坏或无法读取，弹窗提示用户
                 QMessageBox.warning(self, "加载配置失败",
                                     f"无法读取配置文件 '{self.config_path}'。\n将使用默认设置。\n错误: {e}")
-        return 20, 20, 0  # 默认值
+        return 20, 20, 0, 1.2  # 默认值
 
     def save_settings(self):
         """保存配置，并处理可能发生的异常。"""
@@ -128,7 +133,8 @@ class EyeCarePro(QWidget):
                 settings_data = {
                     "t1": self.t1_mins,
                     "t2": self.t2_secs,
-                    "mode": self.remind_mode
+                    "mode": self.remind_mode,
+                    "fade_secs": self.fade_secs
                 }
                 json.dump(settings_data, f, indent=4)
         except IOError as e:
@@ -160,6 +166,17 @@ class EyeCarePro(QWidget):
         h2.addWidget(self.input_t2)
         layout.addLayout(h2)
 
+        h_fade = QHBoxLayout()
+        h_fade.addWidget(QLabel("过渡时间 (s):"))
+        self.input_fade = QDoubleSpinBox()
+        self.input_fade.setRange(0.0, 10.0)
+        self.input_fade.setDecimals(3)
+        self.input_fade.setSingleStep(0.1)
+        self.input_fade.setValue(self.fade_secs)
+        self.input_fade.setToolTip("休息提醒窗口从透明到完全显示的线性淡入时间，支持毫秒级小数。")
+        h_fade.addWidget(self.input_fade)
+        layout.addLayout(h_fade)
+
         layout.addWidget(QLabel("提醒方式:"))
         self.combo_mode = QComboBox()
         self.combo_mode.addItems(["仅弹窗(静音)", "铃声+弹窗", "闪烁+弹窗（静音）", "铃声+闪烁+弹窗"])
@@ -171,6 +188,7 @@ class EyeCarePro(QWidget):
         # (这里我暂时保留了您原来的逻辑，但在美化版中改成了按钮。这是一个设计选择)
         self.input_t1.editingFinished.connect(self.on_parameter_committed)
         self.input_t2.editingFinished.connect(self.on_parameter_committed)
+        self.input_fade.editingFinished.connect(self.on_parameter_committed)
         self.combo_mode.currentIndexChanged.connect(self.on_parameter_committed)
 
         self.check_autostart = QCheckBox("开机自动启动")
@@ -371,14 +389,21 @@ class EyeCarePro(QWidget):
     def on_parameter_committed(self):
         new_t1 = self.input_t1.value()
         new_t2 = self.input_t2.value()
+        new_fade = round(self.input_fade.value(), 3)
         new_mode = self.combo_mode.currentIndex()
 
-        has_changed = (new_t1 != self.t1_mins or new_t2 != self.t2_secs or new_mode != self.remind_mode)
+        has_changed = (
+            new_t1 != self.t1_mins
+            or new_t2 != self.t2_secs
+            or new_mode != self.remind_mode
+            or new_fade != self.fade_secs
+        )
         if has_changed:
             t1_was_changed = (new_t1 != self.t1_mins)
 
             self.t1_mins = new_t1
             self.t2_secs = new_t2
+            self.fade_secs = new_fade
             self.remind_mode = new_mode
             self.save_settings()  # 调用封装好的保存方法
 
@@ -591,7 +616,7 @@ class EyeCarePro(QWidget):
             if self.remind_mode in [2, 3]:  # 闪烁
                 QApplication.alert(self, 3000)
 
-        reminder = ReminderWindow(self.t2_secs)
+        reminder = ReminderWindow(self.t2_secs, self.fade_secs)
         reminder.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         reminder.destroyed.connect(lambda _obj=None, win=reminder: self.restart_after_rest(win))
         reminder.rest_started.connect(lambda: self.update_usage_state(force=True))

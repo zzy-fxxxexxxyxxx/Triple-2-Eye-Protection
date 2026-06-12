@@ -40,6 +40,7 @@ public class MainActivity extends Activity {
     private TextView statsText;
     private EditText workMinutesEdit;
     private EditText restSecondsEdit;
+    private EditText fadeSecondsEdit;
     private Button pauseButton;
     private Button startButton;
 
@@ -129,6 +130,9 @@ public class MainActivity extends Activity {
 
         LinearLayout actionsCard = card();
         actionsCard.addView(label("控制", 18, true));
+        fadeSecondsEdit = decimalEdit("1.200");
+        actionsCard.addView(durationRow("过渡时间：", fadeSecondsEdit, "s"));
+
         startButton = button("开启护眼");
         startButton.setOnClickListener(v -> {
             if (saveSettings()) {
@@ -206,6 +210,9 @@ public class MainActivity extends Activity {
         if (!restSecondsEdit.hasFocus()) {
             restSecondsEdit.setText(String.valueOf(AppPrefs.restSeconds(this)));
         }
+        if (!fadeSecondsEdit.hasFocus()) {
+            fadeSecondsEdit.setText(formatFadeSeconds(AppPrefs.fadeSeconds(this)));
+        }
 
         pauseButton.setEnabled(AppPrefs.STATE_WORKING.equals(state) || AppPrefs.STATE_PAUSED.equals(state));
         pauseButton.setText(AppPrefs.STATE_PAUSED.equals(state) ? "继续" : "暂停");
@@ -216,11 +223,16 @@ public class MainActivity extends Activity {
         try {
             int workMinutes = Integer.parseInt(workMinutesEdit.getText().toString().trim());
             int restSeconds = Integer.parseInt(restSecondsEdit.getText().toString().trim());
+            float fadeSeconds = Float.parseFloat(fadeSecondsEdit.getText().toString().trim());
             if (workMinutes <= 0 || restSeconds <= 0) {
                 Toast.makeText(this, "时间必须大于 0", Toast.LENGTH_SHORT).show();
                 return false;
             }
-            AppPrefs.setDurations(this, workMinutes, restSeconds);
+            if (fadeSeconds < 0f || fadeSeconds > 10f) {
+                Toast.makeText(this, "过渡时间范围是 0 到 10 秒", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+            AppPrefs.setDurations(this, workMinutes, restSeconds, fadeSeconds);
             return true;
         } catch (NumberFormatException e) {
             Toast.makeText(this, "请输入有效数字", Toast.LENGTH_SHORT).show();
@@ -428,6 +440,24 @@ public class MainActivity extends Activity {
         editText.setHintTextColor(Color.rgb(118, 132, 125));
         editText.setPadding(0, dp(8), 0, dp(8));
         return editText;
+    }
+
+    private EditText decimalEdit(String hint) {
+        EditText editText = new EditText(this);
+        editText.setHint(hint);
+        editText.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        editText.setSingleLine(true);
+        editText.setTextColor(TEXT);
+        editText.setHintTextColor(Color.rgb(118, 132, 125));
+        editText.setPadding(0, dp(8), 0, dp(8));
+        return editText;
+    }
+
+    private String formatFadeSeconds(float fadeSeconds) {
+        if (Math.abs(fadeSeconds - Math.round(fadeSeconds)) < 0.0005f) {
+            return String.valueOf(Math.round(fadeSeconds));
+        }
+        return String.format(java.util.Locale.US, "%.3f", fadeSeconds).replaceAll("0+$", "").replaceAll("\\.$", "");
     }
 
     private LinearLayout durationRow(String labelText, EditText editText, String unitText) {

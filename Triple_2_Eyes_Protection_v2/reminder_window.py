@@ -5,22 +5,25 @@ import time
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QLabel, QPushButton, QFrame)
-from PyQt6.QtCore import QTimer, Qt, pyqtSignal
+from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtSignal
 
 
 class ReminderWindow(QWidget):
     rest_started = pyqtSignal()
 
-    def __init__(self, t2_secs):
+    def __init__(self, t2_secs, fade_secs=1.2):
         super().__init__()
         # 计时变量
         self.overtime_seconds = 0
         self.rest_seconds = 0
         self.is_resting = False
         self.target_rest = t2_secs
+        self.fade_secs = max(0.0, min(10.0, float(fade_secs)))
+        self.fade_animation = None
 
         self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowOpacity(0.0 if self.fade_secs > 0 else 1.0)
         self.setFixedSize(400, 300)
 
         screen = QApplication.primaryScreen().geometry()
@@ -112,6 +115,19 @@ class ReminderWindow(QWidget):
         self.display_timer = QTimer(self)
         self.display_timer.timeout.connect(self.tick)
         self.display_timer.start(1000)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self.fade_secs <= 0:
+            self.setWindowOpacity(1.0)
+            return
+
+        self.fade_animation = QPropertyAnimation(self, b"windowOpacity", self)
+        self.fade_animation.setDuration(int(self.fade_secs * 1000))
+        self.fade_animation.setStartValue(0.0)
+        self.fade_animation.setEndValue(1.0)
+        self.fade_animation.setEasingCurve(QEasingCurve.Type.Linear)
+        self.fade_animation.start()
 
     def format_time(self, seconds):
         """将秒转换为分秒格式"""

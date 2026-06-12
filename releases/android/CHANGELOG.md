@@ -1,5 +1,16 @@
 # Android APK Changelog
 
+## 0.1.6 - 2026-06-12
+
+- Added a configurable fade-in duration for the rest reminder in the Control section.
+- The input accepts decimal seconds, allowing millisecond-level values such as `0.300` or `1.250`.
+- Applied a linear opacity transition to both `RestActivity` and the floating overlay reminder.
+- Bumped Android version to `versionCode 7` / `versionName 0.1.6`.
+
+APK:
+
+- `releases/android/0.1.6/Triple2EyeProtection-Android-0.1.6-release.apk`
+
 ## 0.1.5 - 2026-06-07
 
 - 修复点击悬浮覆盖层“休息好了”后回到 Triple 2 Eye Protection 主界面的问题。

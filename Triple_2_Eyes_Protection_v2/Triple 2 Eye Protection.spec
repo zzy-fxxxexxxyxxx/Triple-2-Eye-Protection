@@ -63,7 +63,6 @@ a = Analysis(
     datas=[
         ('eye_icon.ico', '.'),
         ('eye_settings.json', '.'),
-        ('usage_logs', 'usage_logs'),
     ],
     hiddenimports=[],
     hookspath=[],

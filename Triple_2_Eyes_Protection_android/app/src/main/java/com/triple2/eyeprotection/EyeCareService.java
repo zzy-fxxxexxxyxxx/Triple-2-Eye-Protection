@@ -24,6 +24,7 @@ import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -608,6 +609,7 @@ public class EyeCareService extends Service {
         try {
             windowManager.addView(root, params);
             restOverlayView = root;
+            startLinearFadeIn(restOverlayView);
             updateRestOverlay();
         } catch (RuntimeException ignored) {
             restOverlayView = null;
@@ -653,6 +655,20 @@ public class EyeCareService extends Service {
 
     private boolean canShowOverlay() {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this);
+    }
+
+    private void startLinearFadeIn(View view) {
+        long durationMs = Math.round(AppPrefs.fadeSeconds(this) * 1000f);
+        if (durationMs <= 0L) {
+            view.setAlpha(1f);
+            return;
+        }
+        view.setAlpha(0f);
+        view.animate()
+                .alpha(1f)
+                .setDuration(durationMs)
+                .setInterpolator(new LinearInterpolator())
+                .start();
     }
 
     private void vibrateForRest() {

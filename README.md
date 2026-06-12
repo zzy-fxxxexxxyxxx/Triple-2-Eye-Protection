@@ -8,8 +8,8 @@
 
 | 平台 | 版本 | 技术栈 | 状态 |
 | --- | --- | --- | --- |
-| Windows | `2.0.6` | Python 3.10, PyQt6, pywin32, PyInstaller, Inno Setup | 日常可用 |
-| Android | `0.1.5` | 原生 Android Java, Gradle | 测试版 |
+| Windows | `2.0.7` | Python 3.10, PyQt6, pywin32, PyInstaller, Inno Setup | 日常可用 |
+| Android | `0.1.6` | 原生 Android Java, Gradle | 测试版 |
 
 ## 功能概览
 

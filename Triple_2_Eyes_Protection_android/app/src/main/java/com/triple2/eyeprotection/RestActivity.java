@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.WindowManager;
+import android.view.animation.LinearInterpolator;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -52,6 +53,7 @@ public class RestActivity extends Activity {
                         | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
         );
         buildUi();
+        startLinearFadeIn();
         sendCommand(EyeCareService.ACTION_CHECK);
     }
 
@@ -116,6 +118,20 @@ public class RestActivity extends Activity {
         root.addView(doneButton, params);
 
         setContentView(root);
+    }
+
+    private void startLinearFadeIn() {
+        long durationMs = Math.round(AppPrefs.fadeSeconds(this) * 1000f);
+        if (durationMs <= 0L) {
+            getWindow().getDecorView().setAlpha(1f);
+            return;
+        }
+        getWindow().getDecorView().setAlpha(0f);
+        getWindow().getDecorView().animate()
+                .alpha(1f)
+                .setDuration(durationMs)
+                .setInterpolator(new LinearInterpolator())
+                .start();
     }
 
     private void refresh() {

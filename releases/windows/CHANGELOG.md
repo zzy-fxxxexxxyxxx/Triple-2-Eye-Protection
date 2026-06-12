@@ -1,5 +1,16 @@
 # Windows Installer Changelog
 
+## 2.0.7 - 2026-06-12
+
+- Added a configurable fade-in duration for the rest reminder window.
+- The input accepts decimal seconds, allowing millisecond-level values such as `0.300` or `1.250`.
+- The reminder window now uses a linear opacity transition from transparent to opaque.
+- Bumped app and installer version to `2.0.7`.
+
+Installer:
+
+- `releases/windows/2.0.7/Triple2EyeProtection-Setup-2.0.7.exe`
+
 ## 2.0.6 - 2026-06-04
 
 - 修复 Windows 开机自启状态判断：正确识别 `StartupApproved` 中的启用/禁用状态。

@@ -15,6 +15,7 @@ final class AppPrefs {
     private static final String KEY_ENABLED = "enabled";
     private static final String KEY_WORK_MINUTES = "work_minutes";
     private static final String KEY_REST_SECONDS = "rest_seconds";
+    private static final String KEY_FADE_SECONDS = "fade_seconds";
     private static final String KEY_STATE = "state";
     private static final String KEY_WORK_END_AT = "work_end_at";
     private static final String KEY_REST_END_AT = "rest_end_at";
@@ -44,11 +45,20 @@ final class AppPrefs {
         return Math.max(1, prefs(context).getInt(KEY_REST_SECONDS, 20));
     }
 
-    static void setDurations(Context context, int workMinutes, int restSeconds) {
+    static float fadeSeconds(Context context) {
+        return clampFadeSeconds(prefs(context).getFloat(KEY_FADE_SECONDS, 1.2f));
+    }
+
+    static void setDurations(Context context, int workMinutes, int restSeconds, float fadeSeconds) {
         prefs(context).edit()
                 .putInt(KEY_WORK_MINUTES, Math.max(1, workMinutes))
                 .putInt(KEY_REST_SECONDS, Math.max(1, restSeconds))
+                .putFloat(KEY_FADE_SECONDS, clampFadeSeconds(fadeSeconds))
                 .apply();
+    }
+
+    private static float clampFadeSeconds(float fadeSeconds) {
+        return Math.max(0f, Math.min(10f, fadeSeconds));
     }
 
     static String state(Context context) {
