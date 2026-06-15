@@ -618,6 +618,7 @@ class EyeCarePro(QWidget):
 
         reminder = ReminderWindow(self.t2_secs, self.fade_secs)
         reminder.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        reminder.rest_finished.connect(lambda win=reminder: self.restart_after_rest(win))
         reminder.destroyed.connect(lambda _obj=None, win=reminder: self.restart_after_rest(win))
         reminder.rest_started.connect(lambda: self.update_usage_state(force=True))
 

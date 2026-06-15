@@ -10,6 +10,7 @@ from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtSigna
 
 class ReminderWindow(QWidget):
     rest_started = pyqtSignal()
+    rest_finished = pyqtSignal()
 
     def __init__(self, t2_secs, fade_secs=1.2):
         super().__init__()
@@ -103,7 +104,7 @@ class ReminderWindow(QWidget):
 
         self.btn_done = QPushButton("休息好了")
         self.btn_done.setFixedSize(120, 40)
-        self.btn_done.clicked.connect(self.close)
+        self.btn_done.clicked.connect(self.on_rest_done)
         # layout.addWidget(self.btn_done)
 
         v_box.addStretch()
@@ -158,6 +159,11 @@ class ReminderWindow(QWidget):
     def start_rest_immediately(self):
         """供外部直接切换到“开始休息”状态。"""
         self.on_start_rest()
+
+    def on_rest_done(self):
+        """点击休息好了时，先通知主程序完成本轮，再关闭窗口。"""
+        self.rest_finished.emit()
+        self.close()
 
     def closeEvent(self, event):
         # 停止计时器防止内存泄漏

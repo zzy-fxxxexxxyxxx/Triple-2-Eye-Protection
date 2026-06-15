@@ -1,5 +1,16 @@
 # Windows Installer Changelog
 
+## 2.0.8 - 2026-06-15
+
+- Fixed an intermittent duplicate rest-popup issue after clicking `休息好了`.
+- The reminder now notifies the main timer to finish and reset the round before the window is destroyed.
+- Kept the destroy-time reset as a fallback for abnormal close paths.
+- Bumped app and installer version to `2.0.8`.
+
+Installer:
+
+- `releases/windows/2.0.8/Triple2EyeProtection-Setup-2.0.8.exe`
+
 ## 2.0.7 - 2026-06-12
 
 - Added a configurable fade-in duration for the rest reminder window.
