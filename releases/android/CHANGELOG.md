@@ -1,5 +1,16 @@
 # Android APK Changelog
 
+## 0.1.9 - 2026-06-16
+
+- Changed the Android foreground-service status notification to a new visible notification channel.
+- The running service should now show a status-bar icon more reliably on Huawei/Android systems.
+- Kept the status notification silent and non-vibrating while using default importance for icon visibility.
+- Bumped Android version to `versionCode 10` / `versionName 0.1.9`.
+
+APK:
+
+- `releases/android/0.1.9/Triple2EyeProtection-Android-0.1.9-release.apk`
+
 ## 0.1.8 - 2026-06-16
 
 - Added a Quick Settings tile named `Triple 2 护眼` for the Android notification shade.

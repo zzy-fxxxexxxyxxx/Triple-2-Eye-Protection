@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioAttributes;
 import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.Typeface;
@@ -48,7 +49,7 @@ public class EyeCareService extends Service {
     public static final String EXTRA_REST_SECONDS = "rest_seconds";
     public static final String EXTRA_ENABLED = "enabled";
 
-    private static final String STATUS_CHANNEL_ID = "eye_care_status_v2";
+    private static final String STATUS_CHANNEL_ID = "eye_care_status_visible_v1";
     private static final String ALERT_CHANNEL_ID = "eye_care_rest_alerts_v1";
     private static final int STATUS_NOTIFICATION_ID = 2202;
     private static final int REST_ALERT_NOTIFICATION_ID = 2203;
@@ -289,7 +290,7 @@ public class EyeCareService extends Service {
                 .setShowWhen(false);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            builder.setPriority(Notification.PRIORITY_LOW);
+            builder.setPriority(Notification.PRIORITY_DEFAULT);
         }
 
         if (AppPrefs.STATE_RESTING.equals(state)) {
@@ -451,10 +452,15 @@ public class EyeCareService extends Service {
         NotificationChannel statusChannel = new NotificationChannel(
                 STATUS_CHANNEL_ID,
                 "护眼倒计时",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
         );
         statusChannel.setDescription("显示护眼倒计时常驻通知");
+        statusChannel.setSound(null, new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build());
         statusChannel.enableVibration(false);
+        statusChannel.setShowBadge(false);
 
         NotificationChannel alertChannel = new NotificationChannel(
                 ALERT_CHANNEL_ID,
