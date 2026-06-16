@@ -1,5 +1,16 @@
 # Android APK Changelog
 
+## 0.1.8 - 2026-06-16
+
+- Added a Quick Settings tile named `Triple 2 护眼` for the Android notification shade.
+- Tapping the tile starts or stops the eye protection foreground service.
+- The tile shows active/inactive state, while the foreground service notification keeps the status-bar icon visible when running.
+- Bumped Android version to `versionCode 9` / `versionName 0.1.8`.
+
+APK:
+
+- `releases/android/0.1.8/Triple2EyeProtection-Android-0.1.8-release.apk`
+
 ## 0.1.7 - 2026-06-12
 
 - Added a `休息时震动` switch in the Control section.
