@@ -20,24 +20,17 @@ with two iOS-only additions: Dynamic Island (Live Activity) and Home Screen Widg
 
 ## 方法一：GitHub Actions 自动构建（无需 Mac）
 
-### 1. 推送到 GitHub
-```bash
-cd Triple_2_Eyes_Protection_ios
-git init
-git add -A
-git commit -m "iOS port with Dynamic Island and Widget support"
-git remote add origin https://github.com/YOUR_USERNAME/Triple2EyeProtection-iOS.git
-git push -u origin main
-```
+### 1. 触发构建
 
-### 2. 触发构建
-- **自动触发**: 每次 push 到 main 分支自动构建
-- **手动触发**: GitHub → Actions → "Build iOS IPA" → Run workflow
+Workflow 文件位于仓库根目录 `.github/workflows/ios-build.yml`，GitHub 会自动识别。
 
-### 3. 下载 IPA
+- **自动触发**: 推送 `Triple_2_Eyes_Protection_ios/` 下的改动到 main 分支时自动构建
+- **手动触发**: GitHub → Actions → Build iOS IPA → Run workflow
+
+### 2. 下载 IPA
 构建完成后（约 8-12 分钟），在 Actions 页面的 Artifacts 区域下载 `Triple2EyeProtection-IPA.zip`，解压得到 `.ipa` 文件。
 
-### 4. 安装到 iPhone（Sideload）
+### 3. 安装到 iPhone（Sideload）
 
 #### 方案 A：AltStore（推荐，免费）
 1. 在 iPhone 上安装 [AltStore](https://altstore.io)（需要电脑端 AltServer 配合）
@@ -56,7 +49,7 @@ git push -u origin main
 #### 方案 D：付费 Apple Developer（$99/年）
 如果需要永久签名 + 灵动岛推送功能，需要付费开发者账号。配置好证书后，GitHub Actions 可以构建完整签名的 IPA。
 
-### 5. 设置签名（可选，付费账号）
+### 4. 设置签名（可选，付费账号）
 在 GitHub 仓库 Settings → Secrets and variables → Actions 中添加：
 
 | Secret 名称 | 说明 |

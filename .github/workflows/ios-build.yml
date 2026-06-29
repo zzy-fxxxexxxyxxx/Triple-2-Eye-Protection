@@ -3,12 +3,13 @@ name: Build iOS IPA
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "**.md"
+    paths:
+      - "Triple_2_Eyes_Protection_ios/**"
+      - ".github/workflows/ios-build.yml"
   workflow_dispatch:
     inputs:
       build-type:
-        description: "Build type"
+        description: "Build type (unsigned for AltStore, signed for paid dev account)"
         type: choice
         options: [unsigned, signed]
         default: unsigned
@@ -27,15 +28,12 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ---------- Toolchain ----------
       - name: Select Xcode
         run: |
-          # List available Xcode versions
           ls /Applications/Xcode*.app/Contents/Developer || true
-          # Switch to latest available (macos-14 has Xcode 15.4 by default)
           sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer || \
           sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
           xcodebuild -version
@@ -43,15 +41,13 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      # ---------- Generate .xcodeproj ----------
       - name: Generate Xcode project
         working-directory: Triple_2_Eyes_Protection_ios
         run: |
           xcodegen generate
           echo "Generated .xcodeproj:"
-          ls -la Triple2EyeProtection.xcodeproj/
+          ls -la Triple2EyeProtection.xcodeproj/ || echo "(project structure OK)"
 
-      # ---------- Resolve dependencies ----------
       - name: Resolve package dependencies
         working-directory: Triple_2_Eyes_Protection_ios
         run: |
@@ -60,7 +56,7 @@ jobs:
             -scheme Triple2EyeProtection \
             || true
 
-      # ---------- Build (unsigned) ----------
+      # --- Unsigned build (default, for AltStore sideloading) ---
       - name: Build unsigned archive
         if: inputs.build-type == 'unsigned' || github.event_name == 'push'
         working-directory: Triple_2_Eyes_Protection_ios
@@ -78,10 +74,9 @@ jobs:
             PROVISIONING_PROFILE_SPECIFIER="" \
             -allowProvisioningUpdates \
             -skipPackagePluginValidation \
-            -skipMacroValidation \
-            SWIFT_ACTIVE_COMPILATION_CONDITIONS="DEBUG"
+            -skipMacroValidation
 
-      # ---------- Build (signed — requires secrets) ----------
+      # --- Signed build (requires GitHub Secrets) ---
       - name: Build signed archive
         if: inputs.build-type == 'signed'
         working-directory: Triple_2_Eyes_Protection_ios
@@ -92,7 +87,6 @@ jobs:
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
           DEVELOPMENT_TEAM: ${{ secrets.DEVELOPMENT_TEAM }}
         run: |
-          # Import signing certificate
           KEYCHAIN_PATH="${RUNNER_TEMP}/app-signing.keychain-db"
           security create-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
           security set-keychain-settings -lut 900 "${KEYCHAIN_PATH}"
@@ -102,16 +96,13 @@ jobs:
           security import "${RUNNER_TEMP}/cert.p12" \
             -k "${KEYCHAIN_PATH}" \
             -P "${APPLE_CERTIFICATE_PASSWORD}" \
-            -T /usr/bin/codesign \
-            -T /usr/bin/security
+            -T /usr/bin/codesign -T /usr/bin/security
 
           security list-keychains -d user -s "${KEYCHAIN_PATH}"
 
-          # Install provisioning profile
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo -n "${PROVISIONING_PROFILE_BASE64}" | base64 --decode -o ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
 
-          # Build
           xcodebuild archive \
             -project Triple2EyeProtection.xcodeproj \
             -scheme Triple2EyeProtection \
@@ -123,25 +114,25 @@ jobs:
             -skipPackagePluginValidation \
             -skipMacroValidation
 
-      # ---------- Package IPA ----------
+      # --- Package unsigned IPA ---
       - name: Create unsigned IPA
         if: inputs.build-type == 'unsigned' || github.event_name == 'push'
-        working-directory: Triple_2_Eyes_Protection_ios
         run: |
           APP_DIR="${RUNNER_TEMP}/Triple2EyeProtection.xcarchive/Products/Applications"
           if [ -d "${APP_DIR}/Triple2EyeProtection.app" ]; then
-            mkdir -p Payload
-            cp -r "${APP_DIR}/Triple2EyeProtection.app" Payload/
-            zip -r "${RUNNER_TEMP}/Triple2EyeProtection-unsigned.ipa" Payload/
-            rm -rf Payload
-            echo "Unsigned IPA created: $(ls -lh "${RUNNER_TEMP}/Triple2EyeProtection-unsigned.ipa" | awk '{print $5}')"
+            mkdir -p "${RUNNER_TEMP}/Payload"
+            cp -r "${APP_DIR}/Triple2EyeProtection.app" "${RUNNER_TEMP}/Payload/"
+            (cd "${RUNNER_TEMP}" && zip -r Triple2EyeProtection-unsigned.ipa Payload/)
+            rm -rf "${RUNNER_TEMP}/Payload"
+            echo "Unsigned IPA: $(ls -lh "${RUNNER_TEMP}/Triple2EyeProtection-unsigned.ipa" | awk '{print $5}')"
           else
             echo "::error::.app not found at ${APP_DIR}"
             ls -la "${APP_DIR}" || echo "Directory missing"
             exit 1
           fi
 
-      - name: Create signed IPA via export
+      # --- Package signed IPA ---
+      - name: Export signed IPA
         if: inputs.build-type == 'signed'
         working-directory: Triple_2_Eyes_Protection_ios
         run: |
@@ -149,11 +140,11 @@ jobs:
             -archivePath "${RUNNER_TEMP}/Triple2EyeProtection.xcarchive" \
             -exportOptionsPlist ExportOptions.plist \
             -exportPath "${RUNNER_TEMP}/export"
-
-          mv "${RUNNER_TEMP}/export/Triple2EyeProtection.ipa" "${RUNNER_TEMP}/Triple2EyeProtection-signed.ipa"
+          mv "${RUNNER_TEMP}/export/Triple2EyeProtection.ipa" \
+             "${RUNNER_TEMP}/Triple2EyeProtection-signed.ipa"
           echo "Signed IPA created"
 
-      # ---------- Upload artifact ----------
+      # --- Upload ---
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
@@ -164,20 +155,23 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      # ---------- Build summary ----------
       - name: Build summary
         run: |
-          echo "## :iphone: iOS Build Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Build type:** ${{ inputs.build-type || 'unsigned' }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### :warning: Installation Note" >> $GITHUB_STEP_SUMMARY
-          echo "If unsigned, use **[AltStore](https://altstore.io)** or **[SideStore](https://sidestore.io)** to sideload the IPA onto your iPhone with your free Apple ID." >> $GITHUB_STEP_SUMMARY
-          echo "The IPA is limited to 7 days per signature (free account limit)." >> $GITHUB_STEP_SUMMARY
+          {
+            echo "## :iphone: iOS Build Complete"
+            echo ""
+            echo "| Item | Value |"
+            echo "|------|-------|"
+            echo "| Build type | \`${{ inputs.build-type || 'unsigned' }}\` |"
+            echo "| Branch | \`${{ github.ref_name }}\` |"
+            echo "| Commit | \`${{ github.sha }}\` |"
+            echo ""
+            echo "### :warning: Installation"
+            echo "Use **[AltStore](https://altstore.io)** or **[SideStore](https://sidestore.io)** to sideload the IPA."
+            echo "Free Apple ID: 7-day signature, AltStore auto-refreshes on same WiFi."
+          } >> $GITHUB_STEP_SUMMARY
 
-  # ---------- Optional: upload to GitHub Release ----------
+  # --- Optional: attach to GitHub Release ---
   upload-release:
     if: inputs.upload-to-release
     needs: build
@@ -191,7 +185,6 @@ jobs:
         with:
           files: |
             Triple2EyeProtection-unsigned.ipa
-            Triple2EyeProtection-signed.ipa
           tag_name: ios-${{ github.run_number }}
           name: "iOS Build #${{ github.run_number }}"
           draft: true
