@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var manager: EyeCareManager
+    @Environment(\.openURL) private var openURL
     @State private var showRestOverlay = false
     @State private var showKeepAliveGuide = false
 
@@ -207,7 +208,7 @@ struct ContentView: View {
         .alert("打开设置", isPresented: $showKeepAliveGuide) {
             Button("打开通知设置") {
                 if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
-                    UIApplication.shared.open(url)
+                    openURL(url)
                 }
             }
             Button("取消", role: .cancel) {}
