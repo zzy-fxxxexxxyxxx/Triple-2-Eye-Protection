@@ -31,6 +31,23 @@ Triple_2_Eyes_Protection_v2/error.log
 Triple_2_Eyes_Protection_v2/usage_logs/*.txt
 !Triple_2_Eyes_Protection_v2/usage_logs/.gitkeep
 
+# Windows build output (renamed from v2)
+Triple_2_Eyes_Protection_windows/build/
+Triple_2_Eyes_Protection_windows/dist/
+Triple_2_Eyes_Protection_windows/installer_output/
+Triple_2_Eyes_Protection_windows/error.log
+Triple_2_Eyes_Protection_windows/usage_logs/*.txt
+!Triple_2_Eyes_Protection_windows/usage_logs/.gitkeep
+
+# iOS / Xcode build output
+Triple_2_Eyes_Protection_ios/*.xcodeproj/
+Triple_2_Eyes_Protection_ios/*.xcworkspace/
+Triple_2_Eyes_Protection_ios/build/
+Triple_2_Eyes_Protection_ios/DerivedData/
+Triple_2_Eyes_Protection_ios/*.xcarchive
+Triple_2_Eyes_Protection_ios/*.ipa
+Triple_2_Eyes_Protection_ios/Payload/
+
 # Android/Gradle local output
 Triple_2_Eyes_Protection_android/.gradle/
 Triple_2_Eyes_Protection_android/local.properties
