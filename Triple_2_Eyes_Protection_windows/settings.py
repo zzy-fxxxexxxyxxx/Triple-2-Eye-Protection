@@ -6,6 +6,7 @@ class AppSettings:
         self.config_path = config_path
         # 默认值
         self.t1_mins = 20
+        self.default_delay_mins = 10
         self.t2_secs = 20
         self.remind_mode = 0
         # 启动时加载配置
@@ -18,6 +19,7 @@ class AppSettings:
                 with open(self.config_path, 'r') as f:
                     data = json.load(f)
                     self.t1_mins = data.get("t1", self.t1_mins)
+                    self.default_delay_mins = data.get("default_delay_mins", self.default_delay_mins)
                     self.t2_secs = data.get("t2", self.t2_secs)
                     self.remind_mode = data.get("mode", self.remind_mode)
             except (json.JSONDecodeError, IOError):
@@ -29,6 +31,7 @@ class AppSettings:
         with open(self.config_path, 'w') as f:
             settings_data = {
                 "t1": self.t1_mins,
+                "default_delay_mins": self.default_delay_mins,
                 "t2": self.t2_secs,
                 "mode": self.remind_mode
             }

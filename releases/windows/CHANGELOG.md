@@ -1,5 +1,18 @@
 # Windows Installer Changelog
 
+## 2.0.9 - 2026-07-05
+
+- Added a `默认延时 (min)` setting on the Windows main screen, defaulting to `10`.
+- Added `已用眼` to the rest reminder window so the popup shows total eye-use time since the last completed rest.
+- Added a per-popup `延时：xx分钟` action; changing `xx` inside the reminder only affects that reminder and does not overwrite the default delay setting.
+- Delayed reminders now preserve the original eye-use session, while `已提醒` starts fresh for each popup.
+- Starting a rest keeps `已提醒` running but freezes `已用眼`.
+- Bumped app and installer version to `2.0.9`.
+
+Installer:
+
+- `releases/windows/2.0.9/Triple2EyeProtection-Setup-2.0.9.exe`
+
 ## 2.0.8 - 2026-06-15
 
 - Fixed an intermittent duplicate rest-popup issue after clicking `休息好了`.

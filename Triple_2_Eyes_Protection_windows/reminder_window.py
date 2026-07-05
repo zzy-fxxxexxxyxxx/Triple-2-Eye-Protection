@@ -3,16 +3,17 @@ import os
 import time
 
 from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout,
-                             QLabel, QPushButton, QFrame)
+from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
+                             QLabel, QPushButton, QFrame, QSpinBox)
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtSignal
 
 
 class ReminderWindow(QWidget):
     rest_started = pyqtSignal()
     rest_finished = pyqtSignal()
+    delay_requested = pyqtSignal(int)
 
-    def __init__(self, t2_secs, fade_secs=1.2):
+    def __init__(self, t2_secs, fade_secs=1.2, eye_usage_seconds=0, default_delay_mins=10):
         super().__init__()
         # 计时变量
         self.overtime_seconds = 0
@@ -21,18 +22,22 @@ class ReminderWindow(QWidget):
         self.target_rest = t2_secs
         self.fade_secs = max(0.0, min(10.0, float(fade_secs)))
         self.fade_animation = None
+        self.eye_usage_base_seconds = max(0, int(eye_usage_seconds))
+        self.eye_usage_started_at = time.time()
+        self.eye_usage_frozen_seconds = None
+        self.default_delay_mins = max(1, min(300, int(default_delay_mins)))
 
         self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint | Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setWindowOpacity(0.0 if self.fade_secs > 0 else 1.0)
-        self.setFixedSize(400, 300)
+        self.setFixedSize(430, 380)
 
         screen = QApplication.primaryScreen().geometry()
         self.move((screen.width() - self.width()) // 2, (screen.height() - self.height()) // 2)
 
         container = QFrame(self)
         container.setObjectName("MainFrame")
-        container.setFixedSize(400, 300)
+        container.setFixedSize(430, 380)
         container.setStyleSheet("""
             #MainFrame {
                 background-color: #F0FFF0;
@@ -93,21 +98,45 @@ class ReminderWindow(QWidget):
         self.lbl_overtime.setStyleSheet("color: #13A990; font-weight: bold;")
         self.lbl_overtime.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.lbl_overtime)
+        self.lbl_eye_usage = QLabel(f"已用眼：{self.format_time(self.eye_usage_base_seconds)}")
+        self.lbl_eye_usage.setStyleSheet("color: #C65F22; font-weight: bold;")
+        self.lbl_eye_usage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.lbl_eye_usage)
         # 4. 按钮布局
         v_box = QVBoxLayout()
         v_box.setSpacing(10)
+        self.input_delay_mins = QSpinBox()
+        self.input_delay_mins.setRange(1, 300)
+        self.input_delay_mins.setValue(self.default_delay_mins)
+        self.input_delay_mins.setSuffix(" 分钟")
+        self.input_delay_mins.setFixedSize(110, 36)
+        self.input_delay_mins.valueChanged.connect(self.update_delay_button_text)
+
+        self.btn_delay = QPushButton()
+        self.btn_delay.setFixedSize(150, 40)
+        self.btn_delay.clicked.connect(self.on_delay_requested)
+        self.update_delay_button_text(self.default_delay_mins)
+
+        delay_row = QHBoxLayout()
+        delay_row.setSpacing(8)
+        delay_row.addStretch()
+        delay_row.addWidget(self.input_delay_mins)
+        delay_row.addWidget(self.btn_delay)
+        delay_row.addStretch()
+
         # 新增：开始休息按钮
         self.btn_start_rest = QPushButton("开始休息")
-        self.btn_start_rest.setFixedSize(120, 40)
+        self.btn_start_rest.setFixedSize(140, 40)
         self.btn_start_rest.clicked.connect(self.on_start_rest)
         # layout.addWidget(self.btn_start_rest)
 
         self.btn_done = QPushButton("休息好了")
-        self.btn_done.setFixedSize(120, 40)
+        self.btn_done.setFixedSize(140, 40)
         self.btn_done.clicked.connect(self.on_rest_done)
         # layout.addWidget(self.btn_done)
 
         v_box.addStretch()
+        v_box.addLayout(delay_row)
         v_box.addWidget(self.btn_start_rest, alignment=Qt.AlignmentFlag.AlignCenter)
         v_box.addWidget(self.btn_done, alignment=Qt.AlignmentFlag.AlignCenter)
         v_box.addStretch()
@@ -138,11 +167,24 @@ class ReminderWindow(QWidget):
             m, s = divmod(seconds, 60)
             return f"{m}分{s}秒"
 
+    def get_current_eye_usage_seconds(self):
+        if self.eye_usage_frozen_seconds is not None:
+            return self.eye_usage_frozen_seconds
+        return self.eye_usage_base_seconds + max(0, int(time.time() - self.eye_usage_started_at))
+
+    def update_eye_usage_label(self):
+        self.lbl_eye_usage.setText(f"已用眼：{self.format_time(self.get_current_eye_usage_seconds())}")
+
+    def update_delay_button_text(self, value):
+        self.btn_delay.setText(f"延时：{int(value)}分钟")
+
     def tick(self):
         """每秒执行逻辑"""
         # 更新总超时时间
         self.overtime_seconds += 1
         self.lbl_overtime.setText(f"已提醒：{self.format_time(self.overtime_seconds)}")
+        if not self.is_resting:
+            self.update_eye_usage_label()
         # 如果点击了开始休息，更新按钮上的计时
         if self.is_resting:
             self.rest_seconds += 1
@@ -152,9 +194,18 @@ class ReminderWindow(QWidget):
         """点击开始休息"""
         if self.is_resting:
             return
+        self.eye_usage_frozen_seconds = self.get_current_eye_usage_seconds()
+        self.update_eye_usage_label()
         self.is_resting = True
         self.btn_start_rest.setEnabled(False)
+        self.input_delay_mins.setEnabled(False)
+        self.btn_delay.setEnabled(False)
         self.rest_started.emit()
+
+    def on_delay_requested(self):
+        """本次弹窗临时延时，不修改主界面的默认延时配置。"""
+        self.delay_requested.emit(self.input_delay_mins.value())
+        self.close()
 
     def start_rest_immediately(self):
         """供外部直接切换到“开始休息”状态。"""

@@ -8,7 +8,7 @@
 
 | 平台 | 版本 | 技术栈 | 构建方式 |
 | --- | --- | --- | --- |
-| Windows | `2.0.8` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
+| Windows | `2.0.9` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
 | Android | `0.1.9` | Java · Android SDK · Gradle | 本地 Gradle |
 | iOS | `0.1.0` | Swift 5.9 · SwiftUI · ActivityKit · WidgetKit · Swift Charts | GitHub Actions (macOS runner) |
 
@@ -22,7 +22,7 @@
 | 到点休息提醒 | 弹窗 + 声音/闪烁/置顶 | 全屏覆盖层 + 通知 + 可选震动 | 全屏覆盖层 + 通知 + 可选震动 |
 | 暂停 / 继续 / 重置 | 支持 | 支持 | 支持 |
 | 立即休息 | 支持 | 支持 | 支持 |
-| 延时调整 | 支持（正负秒数） | — | — |
+| 延时调整 | 支持（主界面默认延时、弹窗本次延时、正负秒数调整） | — | — |
 | 熄屏/锁屏感知 | 锁屏/休眠/唤醒事件 + 兼容兜底 | 屏幕关闭/亮屏监听 | ScenePhase 前后台切换 |
 | 息屏达标自动重置 | 支持 | 支持 | 支持 |
 | 后台运行 | 系统托盘 | 前台服务常驻通知 | Live Activity + 本地通知 |

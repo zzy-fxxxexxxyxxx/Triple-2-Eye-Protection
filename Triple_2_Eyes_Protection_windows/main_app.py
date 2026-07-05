@@ -63,10 +63,11 @@ class EyeCarePro(QWidget):
 
         # <<< 改进 1: 将配置加载/保存的逻辑封装，而不是直接操作变量 >>>
         # 这样做让代码更清晰，将“数据”和“状态”分离。
-        self.t1_mins, self.t2_secs, self.remind_mode, self.fade_secs = self.load_settings()
+        self.t1_mins, self.t2_secs, self.default_delay_mins, self.remind_mode, self.fade_secs = self.load_settings()
 
         # 核心状态变量
         self.start_time = time.time()
+        self.eye_session_start_time = self.start_time
         self.is_locked = False
         self.lock_timestamp = 0
         self.remaining_at_lock = 0  # <<< 新增 >>>: 用于更精确地恢复计时
@@ -115,14 +116,15 @@ class EyeCarePro(QWidget):
                     return (
                         data.get("t1", 20),
                         data.get("t2", 20),
+                        max(1, min(300, int(data.get("default_delay_mins", 10)))),
                         data.get("mode", 0),
                         float(data.get("fade_secs", 1.2)),
                     )
-            except (json.JSONDecodeError, IOError) as e:
+            except (json.JSONDecodeError, IOError, TypeError, ValueError) as e:
                 # 如果文件损坏或无法读取，弹窗提示用户
                 QMessageBox.warning(self, "加载配置失败",
                                     f"无法读取配置文件 '{self.config_path}'。\n将使用默认设置。\n错误: {e}")
-        return 20, 20, 0, 1.2  # 默认值
+        return 20, 20, 10, 0, 1.2  # 默认值
 
     def save_settings(self):
         """保存配置，并处理可能发生的异常。"""
@@ -133,6 +135,7 @@ class EyeCarePro(QWidget):
                 settings_data = {
                     "t1": self.t1_mins,
                     "t2": self.t2_secs,
+                    "default_delay_mins": self.default_delay_mins,
                     "mode": self.remind_mode,
                     "fade_secs": self.fade_secs
                 }
@@ -143,7 +146,7 @@ class EyeCarePro(QWidget):
     def init_ui(self):
         self.set_app_icon()
         self.setWindowTitle("Triple 2 Eye Protection - settings")
-        self.setFixedSize(360, 560)
+        self.setFixedSize(360, 600)
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         layout = QVBoxLayout()
 
@@ -157,6 +160,15 @@ class EyeCarePro(QWidget):
         self.input_t1.setValue(self.t1_mins)
         h1.addWidget(self.input_t1)
         layout.addLayout(h1)
+
+        h_delay_default = QHBoxLayout()
+        h_delay_default.addWidget(QLabel("默认延时 (min):"))
+        self.input_default_delay = QSpinBox()
+        self.input_default_delay.setRange(1, 300)
+        self.input_default_delay.setValue(self.default_delay_mins)
+        self.input_default_delay.setToolTip("休息提醒弹窗中的默认延时时长；弹窗内临时修改不会影响这里。")
+        h_delay_default.addWidget(self.input_default_delay)
+        layout.addLayout(h_delay_default)
 
         h2 = QHBoxLayout()
         h2.addWidget(QLabel("远望时长 (sec):"))
@@ -187,6 +199,7 @@ class EyeCarePro(QWidget):
         # 避免用户每改动一个值就触发一次保存，提供一个明确的“应用”操作更符合用户习惯。
         # (这里我暂时保留了您原来的逻辑，但在美化版中改成了按钮。这是一个设计选择)
         self.input_t1.editingFinished.connect(self.on_parameter_committed)
+        self.input_default_delay.editingFinished.connect(self.on_parameter_committed)
         self.input_t2.editingFinished.connect(self.on_parameter_committed)
         self.input_fade.editingFinished.connect(self.on_parameter_committed)
         self.combo_mode.currentIndexChanged.connect(self.on_parameter_committed)
@@ -388,12 +401,14 @@ class EyeCarePro(QWidget):
 
     def on_parameter_committed(self):
         new_t1 = self.input_t1.value()
+        new_default_delay = self.input_default_delay.value()
         new_t2 = self.input_t2.value()
         new_fade = round(self.input_fade.value(), 3)
         new_mode = self.combo_mode.currentIndex()
 
         has_changed = (
             new_t1 != self.t1_mins
+            or new_default_delay != self.default_delay_mins
             or new_t2 != self.t2_secs
             or new_mode != self.remind_mode
             or new_fade != self.fade_secs
@@ -402,6 +417,7 @@ class EyeCarePro(QWidget):
             t1_was_changed = (new_t1 != self.t1_mins)
 
             self.t1_mins = new_t1
+            self.default_delay_mins = new_default_delay
             self.t2_secs = new_t2
             self.fade_secs = new_fade
             self.remind_mode = new_mode
@@ -409,6 +425,7 @@ class EyeCarePro(QWidget):
 
             if t1_was_changed:
                 self.start_time = time.time()
+                self.eye_session_start_time = self.start_time
                 self.is_paused = False
                 self.paused_remaining = self.t1_mins * 60
                 self.btn_pause_resume.setText("暂停")
@@ -484,6 +501,7 @@ class EyeCarePro(QWidget):
 
         if lock_duration > self.t2_secs:
             self.start_time = time.time()
+            self.eye_session_start_time = self.start_time
             self.is_paused = False
             self.paused_remaining = self.t1_mins * 60
             self.btn_pause_resume.setText("暂停")
@@ -581,6 +599,9 @@ class EyeCarePro(QWidget):
     def trigger_alert(self):
         self.show_reminder_window(start_resting=False, with_alert=True)
 
+    def get_eye_usage_seconds(self):
+        return max(0, int(time.time() - self.eye_session_start_time))
+
     def get_visible_reminder_window(self):
         """Return the current visible reminder window, clearing stale Qt wrappers."""
         reminder = self.remind_win
@@ -616,11 +637,17 @@ class EyeCarePro(QWidget):
             if self.remind_mode in [2, 3]:  # 闪烁
                 QApplication.alert(self, 3000)
 
-        reminder = ReminderWindow(self.t2_secs, self.fade_secs)
+        reminder = ReminderWindow(
+            self.t2_secs,
+            self.fade_secs,
+            self.get_eye_usage_seconds(),
+            self.default_delay_mins,
+        )
         reminder.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
         reminder.rest_finished.connect(lambda win=reminder: self.restart_after_rest(win))
         reminder.destroyed.connect(lambda _obj=None, win=reminder: self.restart_after_rest(win))
         reminder.rest_started.connect(lambda: self.update_usage_state(force=True))
+        reminder.delay_requested.connect(lambda delay_mins, win=reminder: self.delay_after_reminder(delay_mins, win))
 
         self.remind_win = reminder
         reminder.show()
@@ -629,11 +656,32 @@ class EyeCarePro(QWidget):
         self.update_usage_state(force=True)
         self.update_tray_status()
 
+    def delay_after_reminder(self, delay_mins, reminder=None):
+        if reminder is not None and self.remind_win is not reminder:
+            return
+
+        delay_mins = max(1, min(300, int(delay_mins)))
+        delay_seconds = delay_mins * 60
+        now = time.time()
+
+        # Keep eye_session_start_time untouched so the next popup can show the
+        # full eye-use duration since the last real rest/reset.
+        self.start_time = now - ((self.t1_mins * 60) - delay_seconds)
+        self.is_paused = False
+        self.paused_remaining = delay_seconds
+        self.btn_pause_resume.setText("暂停")
+        self.remind_win = None
+        self.update_countdown_label()
+        self.set_status_message(f"已延时 {delay_mins} 分钟", "orange", 3000)
+        self.update_usage_state(force=True)
+        self.update_tray_status()
+
     def restart_after_rest(self, reminder=None):
         if reminder is not None and self.remind_win is not reminder:
             return
 
         self.start_time = time.time()
+        self.eye_session_start_time = self.start_time
         self.is_paused = False
         self.paused_remaining = self.t1_mins * 60
         self.btn_pause_resume.setText("暂停")
@@ -667,6 +715,7 @@ class EyeCarePro(QWidget):
             return
 
         self.start_time = time.time()
+        self.eye_session_start_time = self.start_time
         self.paused_remaining = self.t1_mins * 60
         self.is_paused = False
         self.btn_pause_resume.setText("暂停")

@@ -1,5 +1,6 @@
 {
     "t1": 20,
+    "default_delay_mins": 10,
     "t2": 20,
     "mode": 0,
     "fade_secs": 1.2
