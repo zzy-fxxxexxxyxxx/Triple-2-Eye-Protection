@@ -8,6 +8,110 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout,
 from PyQt6.QtCore import QEasingCurve, QPropertyAnimation, QTimer, Qt, pyqtSignal
 
 
+class InlineDelayButton(QFrame):
+    clicked = pyqtSignal()
+    value_changed = pyqtSignal(int)
+
+    def __init__(self, value):
+        super().__init__()
+        self.setObjectName("DelayButton")
+        self.setFixedSize(240, 54)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setStyleSheet(self.style_for("#D64545", "#C93636"))
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(24, 0, 20, 0)
+        layout.setSpacing(2)
+
+        label_prefix = QLabel("延时：")
+        label_prefix.setObjectName("DelayButtonLabel")
+        label_prefix.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        label_prefix.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+        self.spin = QSpinBox()
+        self.spin.setRange(1, 300)
+        self.spin.setValue(value)
+        self.spin.setFixedWidth(70)
+        self.spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
+        self.spin.valueChanged.connect(self.value_changed)
+        self.spin.lineEdit().returnPressed.connect(self.clicked)
+
+        label_suffix = QLabel("分钟")
+        label_suffix.setObjectName("DelayButtonLabel")
+        label_suffix.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        label_suffix.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+
+        layout.addStretch()
+        layout.addWidget(label_prefix)
+        layout.addWidget(self.spin)
+        layout.addWidget(label_suffix)
+        layout.addStretch()
+
+    def style_for(self, background, border):
+        return f"""
+            #DelayButton {{
+                background-color: {background};
+                border: 2px solid {border};
+                border-radius: 10px;
+            }}
+            #DelayButton QLabel#DelayButtonLabel {{
+                color: white;
+                font-family: 'Microsoft YaHei';
+                font-size: 17px;
+                font-weight: bold;
+            }}
+            #DelayButton QSpinBox {{
+                background: transparent;
+                border: none;
+                color: white;
+                font-family: 'Microsoft YaHei';
+                font-size: 18px;
+                font-weight: bold;
+                padding: 0;
+                selection-background-color: rgba(255, 255, 255, 70);
+                selection-color: white;
+            }}
+            #DelayButton QSpinBox:focus {{
+                background-color: rgba(255, 255, 255, 28);
+                border-radius: 6px;
+            }}
+        """
+
+    def value(self):
+        return self.spin.value()
+
+    def setEnabled(self, enabled):
+        super().setEnabled(enabled)
+        self.setCursor(Qt.CursorShape.PointingHandCursor if enabled else Qt.CursorShape.ArrowCursor)
+        if enabled:
+            self.setStyleSheet(self.style_for("#D64545", "#C93636"))
+        else:
+            self.setStyleSheet(self.style_for("#E1A1A1", "#D68A8A"))
+
+    def enterEvent(self, event):
+        if self.isEnabled():
+            self.setStyleSheet(self.style_for("#C93636", "#B52B2B"))
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        if self.isEnabled():
+            self.setStyleSheet(self.style_for("#D64545", "#C93636"))
+        super().leaveEvent(event)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.isEnabled():
+            self.setStyleSheet(self.style_for("#B52B2B", "#982222"))
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and self.isEnabled():
+            self.setStyleSheet(self.style_for("#C93636", "#B52B2B"))
+            if not self.spin.geometry().contains(event.position().toPoint()):
+                self.clicked.emit()
+        super().mouseReleaseEvent(event)
+
+
 class ReminderWindow(QWidget):
     rest_started = pyqtSignal()
     rest_finished = pyqtSignal()
@@ -93,36 +197,20 @@ class ReminderWindow(QWidget):
         self.content.setStyleSheet("font-size: 15px;")
         self.content.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.content)
+        self.lbl_eye_usage = QLabel(f"已用眼：{self.format_time(self.eye_usage_base_seconds)}")
+        self.lbl_eye_usage.setStyleSheet("color: #C65F22; font-weight: bold;")
+        self.lbl_eye_usage.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.lbl_eye_usage)
         # 新增：已超时计时显示
         self.lbl_overtime = QLabel("已提醒：0秒")
         self.lbl_overtime.setStyleSheet("color: #13A990; font-weight: bold;")
         self.lbl_overtime.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.lbl_overtime)
-        self.lbl_eye_usage = QLabel(f"已用眼：{self.format_time(self.eye_usage_base_seconds)}")
-        self.lbl_eye_usage.setStyleSheet("color: #C65F22; font-weight: bold;")
-        self.lbl_eye_usage.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self.lbl_eye_usage)
         # 4. 按钮布局
         v_box = QVBoxLayout()
         v_box.setSpacing(10)
-        self.input_delay_mins = QSpinBox()
-        self.input_delay_mins.setRange(1, 300)
-        self.input_delay_mins.setValue(self.default_delay_mins)
-        self.input_delay_mins.setSuffix(" 分钟")
-        self.input_delay_mins.setFixedSize(110, 36)
-        self.input_delay_mins.valueChanged.connect(self.update_delay_button_text)
-
-        self.btn_delay = QPushButton()
-        self.btn_delay.setFixedSize(150, 40)
-        self.btn_delay.clicked.connect(self.on_delay_requested)
-        self.update_delay_button_text(self.default_delay_mins)
-
-        delay_row = QHBoxLayout()
-        delay_row.setSpacing(8)
-        delay_row.addStretch()
-        delay_row.addWidget(self.input_delay_mins)
-        delay_row.addWidget(self.btn_delay)
-        delay_row.addStretch()
+        self.delay_button = InlineDelayButton(self.default_delay_mins)
+        self.delay_button.clicked.connect(self.on_delay_requested)
 
         # 新增：开始休息按钮
         self.btn_start_rest = QPushButton("开始休息")
@@ -136,7 +224,7 @@ class ReminderWindow(QWidget):
         # layout.addWidget(self.btn_done)
 
         v_box.addStretch()
-        v_box.addLayout(delay_row)
+        v_box.addWidget(self.delay_button, alignment=Qt.AlignmentFlag.AlignCenter)
         v_box.addWidget(self.btn_start_rest, alignment=Qt.AlignmentFlag.AlignCenter)
         v_box.addWidget(self.btn_done, alignment=Qt.AlignmentFlag.AlignCenter)
         v_box.addStretch()
@@ -175,9 +263,6 @@ class ReminderWindow(QWidget):
     def update_eye_usage_label(self):
         self.lbl_eye_usage.setText(f"已用眼：{self.format_time(self.get_current_eye_usage_seconds())}")
 
-    def update_delay_button_text(self, value):
-        self.btn_delay.setText(f"延时：{int(value)}分钟")
-
     def tick(self):
         """每秒执行逻辑"""
         # 更新总超时时间
@@ -198,13 +283,12 @@ class ReminderWindow(QWidget):
         self.update_eye_usage_label()
         self.is_resting = True
         self.btn_start_rest.setEnabled(False)
-        self.input_delay_mins.setEnabled(False)
-        self.btn_delay.setEnabled(False)
+        self.delay_button.setEnabled(False)
         self.rest_started.emit()
 
     def on_delay_requested(self):
         """本次弹窗临时延时，不修改主界面的默认延时配置。"""
-        self.delay_requested.emit(self.input_delay_mins.value())
+        self.delay_requested.emit(self.delay_button.value())
         self.close()
 
     def start_rest_immediately(self):

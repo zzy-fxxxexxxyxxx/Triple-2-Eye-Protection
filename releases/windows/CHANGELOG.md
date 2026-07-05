@@ -1,5 +1,17 @@
 # Windows Installer Changelog
 
+## 2.0.10 - 2026-07-06
+
+- Moved `已用眼` above `已提醒` in the rest reminder window.
+- Replaced the separate delay-minute spin box plus delay button with one integrated red delay button.
+- The new delay button embeds the minute value directly inside the button as `延时：xx分钟`, keeping the value editable for the current popup.
+- Disabled the delay control after `开始休息`, matching the existing behavior that delay is only available before rest starts.
+- Bumped app and installer version to `2.0.10`.
+
+Installer:
+
+- `releases/windows/2.0.10/Triple2EyeProtection-Setup-2.0.10.exe`
+
 ## 2.0.9 - 2026-07-05
 
 - Added a `默认延时 (min)` setting on the Windows main screen, defaulting to `10`.

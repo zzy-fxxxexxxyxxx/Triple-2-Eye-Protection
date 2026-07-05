@@ -8,7 +8,7 @@
 
 | 平台 | 版本 | 技术栈 | 构建方式 |
 | --- | --- | --- | --- |
-| Windows | `2.0.9` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
+| Windows | `2.0.10` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
 | Android | `0.1.9` | Java · Android SDK · Gradle | 本地 Gradle |
 | iOS | `0.1.0` | Swift 5.9 · SwiftUI · ActivityKit · WidgetKit · Swift Charts | GitHub Actions (macOS runner) |
 
