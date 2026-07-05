@@ -1,5 +1,16 @@
 # Windows Installer Changelog
 
+## 2.0.11 - 2026-07-06
+
+- Resized the integrated red `延时` control to `140x40`, matching `开始休息` and `休息好了`.
+- Kept the delay minutes editable inside the compact button without using a separate external input box.
+- Changed the `已用眼` label color to the same red family as the delay button.
+- Bumped app and installer version to `2.0.11`.
+
+Installer:
+
+- `releases/windows/2.0.11/Triple2EyeProtection-Setup-2.0.11.exe`
+
 ## 2.0.10 - 2026-07-06
 
 - Moved `已用眼` above `已提醒` in the rest reminder window.

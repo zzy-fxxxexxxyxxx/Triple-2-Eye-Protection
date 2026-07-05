@@ -15,23 +15,24 @@ class InlineDelayButton(QFrame):
     def __init__(self, value):
         super().__init__()
         self.setObjectName("DelayButton")
-        self.setFixedSize(240, 54)
+        self.setFixedSize(140, 40)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet(self.style_for("#D64545", "#C93636"))
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(24, 0, 20, 0)
-        layout.setSpacing(2)
+        layout.setContentsMargins(8, 0, 8, 0)
+        layout.setSpacing(0)
 
         label_prefix = QLabel("延时：")
         label_prefix.setObjectName("DelayButtonLabel")
+        label_prefix.setFixedWidth(42)
         label_prefix.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         label_prefix.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
         self.spin = QSpinBox()
         self.spin.setRange(1, 300)
         self.spin.setValue(value)
-        self.spin.setFixedWidth(70)
+        self.spin.setFixedWidth(42)
         self.spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
         self.spin.valueChanged.connect(self.value_changed)
@@ -39,6 +40,7 @@ class InlineDelayButton(QFrame):
 
         label_suffix = QLabel("分钟")
         label_suffix.setObjectName("DelayButtonLabel")
+        label_suffix.setFixedWidth(30)
         label_suffix.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         label_suffix.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
@@ -58,7 +60,7 @@ class InlineDelayButton(QFrame):
             #DelayButton QLabel#DelayButtonLabel {{
                 color: white;
                 font-family: 'Microsoft YaHei';
-                font-size: 17px;
+                font-size: 14px;
                 font-weight: bold;
             }}
             #DelayButton QSpinBox {{
@@ -66,7 +68,7 @@ class InlineDelayButton(QFrame):
                 border: none;
                 color: white;
                 font-family: 'Microsoft YaHei';
-                font-size: 18px;
+                font-size: 15px;
                 font-weight: bold;
                 padding: 0;
                 selection-background-color: rgba(255, 255, 255, 70);
@@ -198,7 +200,7 @@ class ReminderWindow(QWidget):
         self.content.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.content)
         self.lbl_eye_usage = QLabel(f"已用眼：{self.format_time(self.eye_usage_base_seconds)}")
-        self.lbl_eye_usage.setStyleSheet("color: #C65F22; font-weight: bold;")
+        self.lbl_eye_usage.setStyleSheet("color: #D64545; font-weight: bold;")
         self.lbl_eye_usage.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.lbl_eye_usage)
         # 新增：已超时计时显示

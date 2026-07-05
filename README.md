@@ -8,7 +8,7 @@
 
 | 平台 | 版本 | 技术栈 | 构建方式 |
 | --- | --- | --- | --- |
-| Windows | `2.0.10` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
+| Windows | `2.0.11` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
 | Android | `0.1.9` | Java · Android SDK · Gradle | 本地 Gradle |
 | iOS | `0.1.0` | Swift 5.9 · SwiftUI · ActivityKit · WidgetKit · Swift Charts | GitHub Actions (macOS runner) |
 
@@ -174,6 +174,10 @@ APK 生成在 `app/build/outputs/apk/release/`。当前 release 使用 debug 签
 - Android 优先系统认可的前台服务、通知、闹钟、开机广播路线
 - iOS 优先 Live Activity + 本地通知，适应 iOS 后台约束
 - 每次发布递增版本号
+
+## 实现文档
+
+- [Windows 2.0.11 提醒弹窗 UI 收口](docs/windows-2.0.11-reminder-ui.md)
 
 ## 隐私说明
 
