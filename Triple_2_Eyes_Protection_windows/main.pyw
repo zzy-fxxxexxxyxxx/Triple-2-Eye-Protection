@@ -5,7 +5,7 @@ import time
 import traceback
 
 
-APP_VERSION = "2.1.5"
+APP_VERSION = "2.1.6"
 main_window = None
 single_instance_mutex = None
 SINGLE_INSTANCE_MUTEX_NAME = "Local\\Triple2EyeProtectionSingleInstance"

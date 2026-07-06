@@ -1,5 +1,17 @@
 # Windows Installer Changelog
 
+## 2.1.6 - 2026-07-06
+
+- Redesigned the Windows main settings window into a modern control panel with a gradient header, card sections, compact parameter grid, and integrated status/action panel.
+- Added a countdown progress bar that follows the remaining reminder time.
+- Added visual status badges for running, paused, warning, and alert states.
+- Added system icons to the main action buttons, including pause/resume icon switching.
+- Bumped Windows app and installer version to `2.1.6`.
+
+Installer:
+
+- `releases/windows/2.1.6/Triple2EyeProtection-Setup-2.1.6.exe`
+
 ## 2.1.5 - 2026-07-06
 
 - Reworked curve chart time-axis labels so the first and last labels stay inside the chart width.

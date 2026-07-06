@@ -11,9 +11,9 @@ import winreg
 
 from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QWidget,
-                             QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QDoubleSpinBox,
+                             QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QSpinBox, QDoubleSpinBox,
                              QPushButton, QStyle, QFrame, QComboBox, QCheckBox,
-                             QMessageBox, QDialog, QLineEdit)
+                             QMessageBox, QDialog, QLineEdit, QProgressBar)
 from PyQt6.QtCore import QTimer, Qt
 
 # --- 假设这些类和函数在其他文件中 ---
@@ -143,121 +143,398 @@ class EyeCarePro(QWidget):
         except IOError as e:
             QMessageBox.critical(self, "保存配置失败", f"无法写入配置文件 '{self.config_path}'。\n错误: {e}")
 
+    def apply_main_window_style(self):
+        self.setStyleSheet("""
+            QWidget#MainWindow {
+                background: #EEF4F8;
+                color: #142033;
+                font-family: "Microsoft YaHei UI", "Segoe UI", Arial;
+                font-size: 14px;
+            }
+            QFrame#HeroCard {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                            stop:0 #0F766E, stop:0.58 #14B8A6, stop:1 #7DD3FC);
+                border: 1px solid #B7E7E3;
+                border-radius: 18px;
+            }
+            QLabel#HeroTitle {
+                color: #FFFFFF;
+                font-size: 23px;
+                font-weight: 700;
+                letter-spacing: 0px;
+            }
+            QLabel#HeroSubtitle {
+                color: #E7FFFB;
+                font-size: 12px;
+            }
+            QFrame#Card {
+                background: #FFFFFF;
+                border: 1px solid #D8E3EA;
+                border-radius: 14px;
+            }
+            QLabel#CardTitle {
+                color: #172033;
+                font-size: 16px;
+                font-weight: 700;
+            }
+            QLabel#CardSubtitle, QLabel#FieldHint {
+                color: #6B7A90;
+                font-size: 12px;
+            }
+            QLabel#FieldLabel {
+                color: #314155;
+                font-weight: 600;
+            }
+            QLabel#StatusText {
+                color: #0F766E;
+                font-size: 14px;
+                font-weight: 700;
+            }
+            QLabel#CountdownText {
+                color: #102033;
+                font-size: 26px;
+                font-weight: 800;
+            }
+            QLabel#StateBadge {
+                border-radius: 12px;
+                padding: 5px 12px;
+                font-weight: 700;
+            }
+            QSpinBox, QDoubleSpinBox, QComboBox, QLineEdit {
+                background: #F8FBFD;
+                border: 1px solid #CBD8E2;
+                border-radius: 10px;
+                padding: 0 12px;
+                min-height: 34px;
+                color: #102033;
+                selection-background-color: #99F6E4;
+            }
+            QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QLineEdit:focus {
+                border: 1px solid #14B8A6;
+                background: #FFFFFF;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 34px;
+            }
+            QCheckBox {
+                color: #243447;
+                font-weight: 600;
+                spacing: 10px;
+            }
+            QCheckBox::indicator {
+                width: 20px;
+                height: 20px;
+                border-radius: 6px;
+                border: 1px solid #9FB0C0;
+                background: #FFFFFF;
+            }
+            QCheckBox::indicator:checked {
+                background: #14B8A6;
+                border: 1px solid #14B8A6;
+            }
+            QProgressBar {
+                background: #DBE8EF;
+                border: none;
+                border-radius: 7px;
+                min-height: 14px;
+                max-height: 14px;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                border-radius: 7px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                                            stop:0 #14B8A6, stop:1 #38BDF8);
+            }
+            QPushButton {
+                background: #F8FBFD;
+                border: 1px solid #D4DEE8;
+                border-radius: 11px;
+                color: #132033;
+                font-weight: 700;
+                min-height: 34px;
+            }
+            QPushButton:hover {
+                background: #EDF7FA;
+                border-color: #A9D8D4;
+            }
+            QPushButton:pressed {
+                background: #DDF3F0;
+            }
+            QPushButton#PrimaryButton {
+                background: #0F766E;
+                border: 1px solid #0F766E;
+                color: #FFFFFF;
+            }
+            QPushButton#PrimaryButton:hover {
+                background: #0D9488;
+            }
+            QPushButton#WarningButton {
+                background: #FFF2D8;
+                border: 1px solid #F6C76B;
+                color: #9A5A00;
+            }
+            QPushButton#WarningButton:hover {
+                background: #FFE7B3;
+            }
+            QPushButton#SoftButton {
+                background: #EAF6F4;
+                border: 1px solid #BDE4DE;
+                color: #0F766E;
+            }
+            QPushButton#DangerButton {
+                background: #FFF1F2;
+                border: 1px solid #F3B3BA;
+                color: #D11D36;
+            }
+            QPushButton#DangerButton:hover {
+                background: #FFE4E7;
+            }
+        """)
+
+    def create_card(self, title, subtitle=None):
+        card = QFrame()
+        card.setObjectName("Card")
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(18, 16, 18, 16)
+        card_layout.setSpacing(12)
+
+        title_label = QLabel(title)
+        title_label.setObjectName("CardTitle")
+        card_layout.addWidget(title_label)
+
+        if subtitle:
+            subtitle_label = QLabel(subtitle)
+            subtitle_label.setObjectName("CardSubtitle")
+            card_layout.addWidget(subtitle_label)
+
+        return card, card_layout
+
+    def create_compact_field(self, text, widget):
+        field = QWidget()
+        field_layout = QVBoxLayout(field)
+        field_layout.setContentsMargins(0, 0, 0, 0)
+        field_layout.setSpacing(5)
+
+        label = QLabel(text)
+        label.setObjectName("FieldLabel")
+        widget.setFixedHeight(36)
+        field_layout.addWidget(label)
+        field_layout.addWidget(widget)
+        return field
+
+    def get_standard_icon(self, name, fallback="SP_FileIcon"):
+        pixmap = getattr(QStyle.StandardPixmap, name, getattr(QStyle.StandardPixmap, fallback))
+        return self.style().standardIcon(pixmap)
+
+    def create_action_button(self, text, object_name="SecondaryButton", height=40, icon_name=None):
+        button = QPushButton(text)
+        button.setObjectName(object_name)
+        button.setFixedHeight(height)
+        button.setCursor(Qt.CursorShape.PointingHandCursor)
+        if icon_name:
+            button.setIcon(self.get_standard_icon(icon_name))
+            button.setIconSize(button.iconSize())
+        return button
+
+    def update_pause_button_visual(self):
+        if not hasattr(self, "btn_pause_resume"):
+            return
+        self.btn_pause_resume.setText("继续" if self.is_paused else "暂停")
+        icon_name = "SP_MediaPlay" if self.is_paused else "SP_MediaPause"
+        self.btn_pause_resume.setIcon(self.get_standard_icon(icon_name))
+
+    def set_status_visual_state(self, color):
+        color_map = {
+            "green": ("计时中", "#DDF7EF", "#0F766E"),
+            "orange": ("注意", "#FFF2D8", "#A35B00"),
+            "blue": ("暂停", "#E7F0FF", "#2563EB"),
+            "red": ("警示", "#FFE4E7", "#D11D36"),
+        }
+        badge_text, badge_bg, badge_fg = color_map.get(color, color_map["green"])
+        status_color = badge_fg
+        if hasattr(self, "lbl_state_badge"):
+            self.lbl_state_badge.setText(badge_text)
+            self.lbl_state_badge.setStyleSheet(
+                f"background: {badge_bg}; color: {badge_fg}; border-radius: 12px; padding: 5px 12px; font-weight: 700;"
+            )
+        if hasattr(self, "lbl_status"):
+            self.lbl_status.setStyleSheet(f"color: {status_color}; font-size: 14px; font-weight: 700;")
+
+    def restore_running_status(self):
+        self.lbl_status.setText("状态: 正在计时...")
+        self.set_status_visual_state("green")
+
+    def update_countdown_display(self, remaining_seconds=None):
+        if remaining_seconds is None:
+            self.lbl_countdown.setText("剩余提醒时间: --:--")
+            if hasattr(self, "countdown_progress"):
+                self.countdown_progress.setValue(0)
+            return
+
+        rem = max(0, int(remaining_seconds))
+        self.lbl_countdown.setText(f"剩余提醒时间: {self.format_countdown(rem)}")
+        if hasattr(self, "countdown_progress"):
+            total = max(1, int(self.t1_mins * 60))
+            progress_value = int(max(0.0, min(1.0, rem / total)) * 1000)
+            self.countdown_progress.setValue(progress_value)
+
     def init_ui(self):
         self.set_app_icon()
         self.setWindowTitle("Triple 2 Eye Protection - settings")
-        self.setFixedSize(360, 600)
+        self.setFixedSize(430, 740)
+        self.setObjectName("MainWindow")
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        layout = QVBoxLayout()
+        self.apply_main_window_style()
 
-        layout.addWidget(QLabel("<b>参数配置</b>"))
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(18, 18, 18, 18)
+        layout.setSpacing(12)
 
-        # ... (UI布局代码保持不变) ...
-        h1 = QHBoxLayout()
-        h1.addWidget(QLabel("用眼时长 (min):"))
+        hero = QFrame()
+        hero.setObjectName("HeroCard")
+        hero_layout = QHBoxLayout(hero)
+        hero_layout.setContentsMargins(18, 14, 18, 14)
+        hero_layout.setSpacing(14)
+
+        icon_label = QLabel()
+        icon_label.setPixmap(self.app_icon.pixmap(42, 42))
+        icon_label.setFixedSize(46, 46)
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        hero_layout.addWidget(icon_label)
+
+        hero_text_layout = QVBoxLayout()
+        hero_text_layout.setSpacing(3)
+        hero_title = QLabel("Triple 2")
+        hero_title.setObjectName("HeroTitle")
+        hero_subtitle = QLabel("Eye Protection · 护眼计时控制台")
+        hero_subtitle.setObjectName("HeroSubtitle")
+        hero_text_layout.addWidget(hero_title)
+        hero_text_layout.addWidget(hero_subtitle)
+        hero_layout.addLayout(hero_text_layout, 1)
+        layout.addWidget(hero)
+
+        settings_card, settings_layout = self.create_card("参数配置")
+        settings_layout.setSpacing(10)
+
         self.input_t1 = QSpinBox()
         self.input_t1.setRange(1, 300)
         self.input_t1.setValue(self.t1_mins)
-        h1.addWidget(self.input_t1)
-        layout.addLayout(h1)
 
-        h_delay_default = QHBoxLayout()
-        h_delay_default.addWidget(QLabel("默认延时 (min):"))
         self.input_default_delay = QSpinBox()
         self.input_default_delay.setRange(1, 300)
         self.input_default_delay.setValue(self.default_delay_mins)
         self.input_default_delay.setToolTip("休息提醒弹窗中的默认延时时长；弹窗内临时修改不会影响这里。")
-        h_delay_default.addWidget(self.input_default_delay)
-        layout.addLayout(h_delay_default)
 
-        h2 = QHBoxLayout()
-        h2.addWidget(QLabel("远望时长 (sec):"))
         self.input_t2 = QSpinBox()
         self.input_t2.setRange(5, 6000)
         self.input_t2.setValue(self.t2_secs)
-        h2.addWidget(self.input_t2)
-        layout.addLayout(h2)
 
-        h_fade = QHBoxLayout()
-        h_fade.addWidget(QLabel("过渡时间 (s):"))
         self.input_fade = QDoubleSpinBox()
         self.input_fade.setRange(0.0, 10.0)
         self.input_fade.setDecimals(3)
         self.input_fade.setSingleStep(0.1)
         self.input_fade.setValue(self.fade_secs)
         self.input_fade.setToolTip("休息提醒窗口从透明到完全显示的线性淡入时间，支持毫秒级小数。")
-        h_fade.addWidget(self.input_fade)
-        layout.addLayout(h_fade)
 
-        layout.addWidget(QLabel("提醒方式:"))
+        settings_grid = QGridLayout()
+        settings_grid.setContentsMargins(0, 0, 0, 0)
+        settings_grid.setHorizontalSpacing(14)
+        settings_grid.setVerticalSpacing(8)
+        settings_grid.addWidget(self.create_compact_field("用眼时长 (min)", self.input_t1), 0, 0)
+        settings_grid.addWidget(self.create_compact_field("默认延时 (min)", self.input_default_delay), 0, 1)
+        settings_grid.addWidget(self.create_compact_field("远望时长 (sec)", self.input_t2), 1, 0)
+        settings_grid.addWidget(self.create_compact_field("过渡时间 (s)", self.input_fade), 1, 1)
+        settings_layout.addLayout(settings_grid)
+
+        mode_row = QHBoxLayout()
+        mode_row.setSpacing(12)
+        mode_label = QLabel("提醒方式")
+        mode_label.setObjectName("FieldLabel")
+        mode_label.setMinimumWidth(78)
         self.combo_mode = QComboBox()
         self.combo_mode.addItems(["仅弹窗(静音)", "铃声+弹窗", "闪烁+弹窗（静音）", "铃声+闪烁+弹窗"])
         self.combo_mode.setCurrentIndex(self.remind_mode)
-        layout.addWidget(self.combo_mode)
+        self.combo_mode.setFixedHeight(36)
+        mode_row.addWidget(mode_label)
+        mode_row.addWidget(self.combo_mode, 1)
+        settings_layout.addLayout(mode_row)
 
-        # <<< 改进 4: 将参数修改的信号统一连接到一个“应用”按钮 >>>
-        # 避免用户每改动一个值就触发一次保存，提供一个明确的“应用”操作更符合用户习惯。
-        # (这里我暂时保留了您原来的逻辑，但在美化版中改成了按钮。这是一个设计选择)
+        self.check_autostart = QCheckBox("开机自动启动")
+        self.check_autostart.setChecked(self.is_autostart_enabled())
+        settings_layout.addWidget(self.check_autostart)
+        layout.addWidget(settings_card)
+
         self.input_t1.editingFinished.connect(self.on_parameter_committed)
         self.input_default_delay.editingFinished.connect(self.on_parameter_committed)
         self.input_t2.editingFinished.connect(self.on_parameter_committed)
         self.input_fade.editingFinished.connect(self.on_parameter_committed)
         self.combo_mode.currentIndexChanged.connect(self.on_parameter_committed)
-
-        self.check_autostart = QCheckBox("开机自动启动")
-        self.check_autostart.setChecked(self.is_autostart_enabled())
         self.check_autostart.stateChanged.connect(self.toggle_autostart)
-        layout.addWidget(self.check_autostart)
 
-        line = QFrame()
-        line.setFrameShape(QFrame.Shape.HLine)
-        layout.addWidget(line)
-
+        control_card, control_layout = self.create_card("当前状态")
+        control_layout.setSpacing(10)
+        status_header = QHBoxLayout()
+        status_header.setSpacing(10)
         self.lbl_status = QLabel("状态: 正在计时...")
-        self.lbl_status.setStyleSheet("color: green;")
-        layout.addWidget(self.lbl_status)
+        self.lbl_status.setObjectName("StatusText")
+        status_header.addWidget(self.lbl_status, 1)
+        self.lbl_state_badge = QLabel("计时中")
+        self.lbl_state_badge.setObjectName("StateBadge")
+        self.lbl_state_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        status_header.addWidget(self.lbl_state_badge)
+        control_layout.addLayout(status_header)
+
         self.lbl_countdown = QLabel("剩余提醒时间: --:--")
-        layout.addWidget(self.lbl_countdown)
+        self.lbl_countdown.setObjectName("CountdownText")
+        self.lbl_countdown.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        control_layout.addWidget(self.lbl_countdown)
+
+        self.countdown_progress = QProgressBar()
+        self.countdown_progress.setRange(0, 1000)
+        self.countdown_progress.setTextVisible(False)
+        control_layout.addWidget(self.countdown_progress)
+        self.set_status_visual_state("green")
 
         action_row_1 = QHBoxLayout()
-        self.btn_pause_resume = QPushButton("暂停")
+        action_row_1.setSpacing(12)
+        self.btn_pause_resume = self.create_action_button("暂停", height=38, icon_name="SP_MediaPause")
         self.btn_pause_resume.clicked.connect(self.toggle_pause_resume)
         action_row_1.addWidget(self.btn_pause_resume)
 
-        btn_reset = QPushButton("重置")
+        btn_reset = self.create_action_button("重置", height=38, icon_name="SP_BrowserReload")
         btn_reset.clicked.connect(self.reset_countdown)
         action_row_1.addWidget(btn_reset)
-        layout.addLayout(action_row_1)
+        control_layout.addLayout(action_row_1)
 
         action_row_2 = QHBoxLayout()
-        btn_start_rest_now = QPushButton("开始休息")
+        action_row_2.setSpacing(12)
+        btn_start_rest_now = self.create_action_button("开始休息", "PrimaryButton", 38, "SP_DialogApplyButton")
         btn_start_rest_now.clicked.connect(self.start_rest_now)
         action_row_2.addWidget(btn_start_rest_now)
 
-        btn_delay = QPushButton("延时")
+        btn_delay = self.create_action_button("延时", "WarningButton", 38, "SP_MessageBoxWarning")
         btn_delay.clicked.connect(self.show_delay_dialog)
         action_row_2.addWidget(btn_delay)
-        layout.addLayout(action_row_2)
+        control_layout.addLayout(action_row_2)
 
-        btn_query = QPushButton("查询")
+        action_row_3 = QHBoxLayout()
+        action_row_3.setSpacing(12)
+        btn_query = self.create_action_button("查询记录", height=38, icon_name="SP_FileDialogDetailedView")
         btn_query.clicked.connect(self.open_query_window)
-        layout.addWidget(btn_query)
+        action_row_3.addWidget(btn_query)
 
-        btn_hide = QPushButton("后台运行")
-        btn_hide.setFixedHeight(40)
-        # <<< 修改这行 >>>
-        # 将 .clicked.connect(self.hide) 修改为：
+        btn_hide = self.create_action_button("后台运行", "SoftButton", 38, "SP_TitleBarMinButton")
         btn_hide.clicked.connect(self.hide_to_tray)
-        layout.addWidget(btn_hide)
+        action_row_3.addWidget(btn_hide)
+        control_layout.addLayout(action_row_3)
 
-        btn_quit = QPushButton("彻底退出程序")
-        btn_quit.setStyleSheet("color: #D32F2F;")
-        # <<< 改进 5: 退出前增加确认弹窗，防止误触 >>>
+        btn_quit = self.create_action_button("彻底退出程序", "DangerButton", 38, "SP_DialogCloseButton")
         btn_quit.clicked.connect(self.confirm_quit)
-        layout.addWidget(btn_quit)
+        control_layout.addWidget(btn_quit)
+        layout.addWidget(control_card)
 
-        self.setLayout(layout)
-
+        self.update_countdown_label()
     def set_app_icon(self):
         icon_path = get_resource_path("eye_icon.ico")
         if os.path.exists(icon_path):
@@ -428,7 +705,7 @@ class EyeCarePro(QWidget):
                 self.eye_session_start_time = self.start_time
                 self.is_paused = False
                 self.paused_remaining = self.t1_mins * 60
-                self.btn_pause_resume.setText("暂停")
+                self.update_pause_button_visual()
                 self.set_status_message("用眼时长已改，重置计时", "orange", 3000)
             else:
                 self.set_status_message("参数已更新", "green", 2000)
@@ -444,12 +721,11 @@ class EyeCarePro(QWidget):
         self.query_window.activateWindow()
 
     def set_status_message(self, text, color, duration):
-        """一个辅助函数，用于显示状态信息并在一段时间后恢复。"""
+        """显示状态信息，并在需要时恢复到默认计时状态。"""
         self.lbl_status.setText(f"状态: {text}")
-        self.lbl_status.setStyleSheet(f"color: {color};")
+        self.set_status_visual_state(color)
         if duration and duration > 0:
-            QTimer.singleShot(duration, lambda: self.lbl_status.setText("状态: 正在计时..."))
-            QTimer.singleShot(duration, lambda: self.lbl_status.setStyleSheet("color: green;"))
+            QTimer.singleShot(duration, self.restore_running_status)
 
     def register_windows_session_notifications(self):
         try:
@@ -487,7 +763,7 @@ class EyeCarePro(QWidget):
         self.was_paused_at_lock = self.is_paused
         self.remaining_at_lock = self.get_remaining_seconds()
         self.set_status_message(reason, "blue", 0)
-        self.lbl_countdown.setText("剩余提醒时间: --:--")
+        self.update_countdown_display(None)
         self.update_tray_status()
         self.update_usage_state(force=True)
         self.usage_log_manager.flush()
@@ -504,18 +780,18 @@ class EyeCarePro(QWidget):
             self.eye_session_start_time = self.start_time
             self.is_paused = False
             self.paused_remaining = self.t1_mins * 60
-            self.btn_pause_resume.setText("暂停")
+            self.update_pause_button_visual()
             self.set_status_message(f"{reason}，休息达标({int(lock_duration)}s)，重置计时", "green", 3000)
         else:
             if self.was_paused_at_lock:
                 self.is_paused = True
                 self.paused_remaining = max(0, int(self.remaining_at_lock))
-                self.btn_pause_resume.setText("继续")
+                self.update_pause_button_visual()
                 self.set_status_message(f"{reason}，恢复暂停状态", "orange", 2000)
             else:
                 self.is_paused = False
                 self.start_time = time.time() - ((self.t1_mins * 60) - self.remaining_at_lock)
-                self.btn_pause_resume.setText("暂停")
+                self.update_pause_button_visual()
                 self.set_status_message(f"{reason}，计时继续", "green", 2000)
 
         self.update_countdown_label()
@@ -629,7 +905,7 @@ class EyeCarePro(QWidget):
             return
 
         self.is_paused = False
-        self.btn_pause_resume.setText("暂停")
+        self.update_pause_button_visual()
 
         if with_alert:
             if self.remind_mode in [1, 3]:  # 铃声
@@ -669,7 +945,7 @@ class EyeCarePro(QWidget):
         self.start_time = now - ((self.t1_mins * 60) - delay_seconds)
         self.is_paused = False
         self.paused_remaining = delay_seconds
-        self.btn_pause_resume.setText("暂停")
+        self.update_pause_button_visual()
         self.remind_win = None
         self.update_countdown_label()
         self.set_status_message(f"已延时 {delay_mins} 分钟", "orange", 3000)
@@ -684,7 +960,7 @@ class EyeCarePro(QWidget):
         self.eye_session_start_time = self.start_time
         self.is_paused = False
         self.paused_remaining = self.t1_mins * 60
-        self.btn_pause_resume.setText("暂停")
+        self.update_pause_button_visual()
         # 清理对窗口的引用
         self.remind_win = None
         self.update_tray_status()
@@ -699,13 +975,13 @@ class EyeCarePro(QWidget):
             elapsed = time.time() - self.start_time
             self.paused_remaining = max(0, int(self.t1_mins * 60 - elapsed))
             self.is_paused = True
-            self.btn_pause_resume.setText("继续")
-            self.lbl_countdown.setText(f"剩余提醒时间: {self.paused_remaining // 60:02d}:{self.paused_remaining % 60:02d}")
+            self.update_pause_button_visual()
+            self.update_countdown_display(self.paused_remaining)
             self.set_status_message("计时已暂停", "orange", 0)
         else:
             self.start_time = time.time() - ((self.t1_mins * 60) - self.paused_remaining)
             self.is_paused = False
-            self.btn_pause_resume.setText("暂停")
+            self.update_pause_button_visual()
             self.set_status_message("计时已继续", "green", 1500)
         self.update_tray_status()
 
@@ -718,7 +994,7 @@ class EyeCarePro(QWidget):
         self.eye_session_start_time = self.start_time
         self.paused_remaining = self.t1_mins * 60
         self.is_paused = False
-        self.btn_pause_resume.setText("暂停")
+        self.update_pause_button_visual()
         self.update_countdown_label()
         self.set_status_message("倒计时已重置", "green", 2000)
 
@@ -814,9 +1090,8 @@ class EyeCarePro(QWidget):
 
     def update_countdown_label(self):
         rem = self.get_remaining_seconds()
-        self.lbl_countdown.setText(f"剩余提醒时间: {self.format_countdown(rem)}")
+        self.update_countdown_display(rem)
         self.update_tray_status()
-
     def check_system_status(self):
         curr_locked = win32gui.GetForegroundWindow() == 0
 
@@ -848,7 +1123,7 @@ class EyeCarePro(QWidget):
         if not self.is_locked:
             elapsed = time.time() - self.start_time
             rem = max(0, int(self.t1_mins * 60 - elapsed))
-            self.lbl_countdown.setText(f"剩余提醒时间: {self.format_countdown(rem)}")
+            self.update_countdown_display(rem)
             if elapsed >= (self.t1_mins * 60):
                 self.trigger_alert()
 
