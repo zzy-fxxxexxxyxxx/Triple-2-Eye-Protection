@@ -8,7 +8,7 @@
 
 | 平台 | 版本 | 技术栈 | 构建方式 |
 | --- | --- | --- | --- |
-| Windows | `2.0.11` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
+| Windows | `2.1.0` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
 | Android | `0.1.9` | Java · Android SDK · Gradle | 本地 Gradle |
 | iOS | `0.1.0` | Swift 5.9 · SwiftUI · ActivityKit · WidgetKit · Swift Charts | GitHub Actions (macOS runner) |
 
@@ -28,8 +28,8 @@
 | 后台运行 | 系统托盘 | 前台服务常驻通知 | Live Activity + 本地通知 |
 | 开机自启 | 注册表 Run + StartupApproved | BOOT_COMPLETED 广播 | scenePhase 自动恢复 |
 | 快捷开关 | 托盘菜单 | 快捷设置 Tile | 灵动岛 + 桌面小组件 |
-| 使用记录统计 | 12h / 24h / 7天 / 1个月 / 6个月 / 1年 | 同左 | 同左 |
-| 休息曲线图表 | — | — | 30 天柱状图 (Swift Charts) |
+| 使用记录统计 | 12h / 24h / 7天 / 1个月 / 6个月 / 1年 + 时长占比 + 未记录 | 12h / 24h / 7天 / 1个月 / 6个月 / 1年 | 12h / 24h / 7天 / 1个月 / 6个月 / 1年 |
+| 状态图表 | 曲线图 / 时间轴色块 + 可配置 y 值 | — | 30 天柱状图 (Swift Charts) |
 | 灵动岛实时倒计时 | — | — | 支持 (compact / expanded / minimal) |
 | 桌面小组件 | — | — | 5 种尺寸 (S / M / inline / circular / rectangular) |
 | 华为保活指南 | — | 内置设置入口 | — |
@@ -177,6 +177,7 @@ APK 生成在 `app/build/outputs/apk/release/`。当前 release 使用 debug 签
 
 ## 实现文档
 
+- [Windows 2.1.0 查询页统计与状态图表](docs/windows-2.1.0-usage-query.md)
 - [Windows 2.0.11 提醒弹窗 UI 收口](docs/windows-2.0.11-reminder-ui.md)
 
 ## 隐私说明

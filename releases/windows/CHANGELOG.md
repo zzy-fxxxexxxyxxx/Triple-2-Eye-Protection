@@ -1,5 +1,20 @@
 # Windows Installer Changelog
 
+## 2.1.0 - 2026-07-06
+
+- Added a fourth query state, `未记录`, for offline/locked/unknown periods.
+- Query statistics now show `absolute duration + percentage`, and the four state percentages are adjusted to add up to `100.0%`.
+- Kept legacy log values unchanged; old `0.3` records are mapped to `提醒未休息`, which now defaults to display at `y=0.7`.
+- Added configurable chart y-values for `使用中`, `提醒未休息`, `休息中`, and `未记录`.
+- Added a chart display switch between `时间轴色块` and `曲线图`.
+- Added `未记录` to the curve/timeline display with default `y=-0.1`.
+- Renamed the query custom range button from `Apply` to `应用`.
+- Bumped Windows app and installer version to `2.1.0`.
+
+Installer:
+
+- `releases/windows/2.1.0/Triple2EyeProtection-Setup-2.1.0.exe`
+
 ## 2.0.11 - 2026-07-06
 
 - Resized the integrated red `延时` control to `140x40`, matching `开始休息` and `休息好了`.
