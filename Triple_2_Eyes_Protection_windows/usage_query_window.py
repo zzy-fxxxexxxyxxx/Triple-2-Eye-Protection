@@ -4,7 +4,7 @@ import os
 from datetime import datetime, timedelta
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPainter, QPen
+from PyQt6.QtGui import QColor, QBrush, QLinearGradient, QPainter, QPen
 from PyQt6.QtWidgets import (QComboBox, QDateTimeEdit, QDoubleSpinBox,
                              QGroupBox, QHBoxLayout, QLabel, QPushButton,
                              QTableWidget, QTableWidgetItem, QVBoxLayout,
@@ -311,7 +311,7 @@ def get_preset_range(range_key, end_time=None):
 class UsagePlotWidget(QWidget):
     def __init__(self):
         super().__init__()
-        self.setMinimumHeight(340)
+        self.setMinimumHeight(380)
         self.range_start = None
         self.range_end = None
         self.records = []
@@ -381,12 +381,14 @@ class UsagePlotWidget(QWidget):
     def draw_timeline(self, painter):
         left = 64
         right = 24
-        top = 28
-        bar_top = 92
-        bar_height = 70
+        legend_top = 28
+        bar_top = 108
+        bottom_space = 66
         width = max(1, self.width() - left - right)
+        available_height = max(1, self.height() - bar_top - bottom_space)
+        bar_height = max(120, min(240, available_height))
 
-        self.draw_legend(painter, left, top)
+        self.draw_legend(painter, left, legend_top)
 
         painter.setPen(QPen(QColor(205, 213, 224), 1))
         painter.setBrush(QColor(244, 247, 250))
@@ -418,14 +420,17 @@ class UsagePlotWidget(QWidget):
         metrics = self.fontMetrics()
         left = max(112, max(metrics.horizontalAdvance(label) for label in label_samples) + 18)
         right = 24
-        top = 48
-        bottom = 58
+        top = 64
+        bottom = 82
         width = max(1, self.width() - left - right)
         height = max(1, self.height() - top - bottom)
 
         y_values = list(self.display_y.values())
-        y_min = min(y_values) - 0.05
-        y_max = max(y_values) + 0.05
+        y_min_raw = min(y_values)
+        y_max_raw = max(y_values)
+        y_padding = max(0.08, (y_max_raw - y_min_raw) * 0.1)
+        y_min = y_min_raw - y_padding
+        y_max = y_max_raw + y_padding
         if abs(y_max - y_min) < 1e-9:
             y_max = y_min + 1.0
 
@@ -452,24 +457,28 @@ class UsagePlotWidget(QWidget):
         segments = build_state_segments(self.records, self.range_start, self.range_end)
         previous_y = None
         previous_x = None
+        previous_state_key = None
         for seg_start, seg_end, state_key in segments:
             x1 = self.map_x(seg_start, left, width)
             x2 = self.map_x(seg_end, left, width)
             y = map_y(state_key)
             color = STATE_COLOR_MAP[state_key]
 
-            if previous_y is not None and previous_x == x1 and previous_y != y:
-                painter.setPen(QPen(QColor(150, 158, 168), 1))
+            if previous_y is not None and previous_x == x1 and previous_y != y and previous_state_key is not None:
+                gradient = QLinearGradient(x1, previous_y, x1, y)
+                gradient.setColorAt(0.0, STATE_COLOR_MAP[previous_state_key])
+                gradient.setColorAt(1.0, color)
+                painter.setPen(QPen(QBrush(gradient), 3))
                 painter.drawLine(x1, previous_y, x1, y)
 
-            pen_style = Qt.PenStyle.DashLine if state_key == STATE_UNRECORDED else Qt.PenStyle.SolidLine
-            painter.setPen(QPen(color, 3, pen_style))
+            painter.setPen(QPen(color, 3, Qt.PenStyle.SolidLine))
             painter.drawLine(x1, y, x2, y)
             painter.setBrush(color)
             painter.drawEllipse(x1 - 3, y - 3, 6, 6)
 
             previous_x = x2
             previous_y = y
+            previous_state_key = state_key
 
         self.draw_time_ticks(painter, left, top + height + 10, width)
 
