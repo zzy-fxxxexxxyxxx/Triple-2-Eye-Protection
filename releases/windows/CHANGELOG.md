@@ -1,5 +1,17 @@
 # Windows Installer Changelog
 
+## 2.1.4 - 2026-07-06
+
+- Added explicit bottom padding inside the `状态曲线` group so the chart widget no longer visually covers the group border in full screen.
+- Kept curve chart time ticks inside the white plot area with a larger internal bottom safety band.
+- Reduced the plot widget minimum height to fit the default query window while preserving full-screen expansion.
+- Added full-screen geometry and curve-rendering checks for the query chart.
+- Bumped Windows app and installer version to `2.1.4`.
+
+Installer:
+
+- `releases/windows/2.1.4/Triple2EyeProtection-Setup-2.1.4.exe`
+
 ## 2.1.3 - 2026-07-06
 
 - Moved curve chart time ticks into an internal bottom band so they no longer overflow the `状态曲线` area.

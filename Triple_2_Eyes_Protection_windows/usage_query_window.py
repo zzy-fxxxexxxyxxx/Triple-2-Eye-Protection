@@ -7,8 +7,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QBrush, QLinearGradient, QPainter, QPen
 from PyQt6.QtWidgets import (QComboBox, QDateTimeEdit, QDoubleSpinBox,
                              QGroupBox, QHBoxLayout, QLabel, QPushButton,
-                             QTableWidget, QTableWidgetItem, QVBoxLayout,
-                             QWidget)
+                             QSizePolicy, QTableWidget, QTableWidgetItem,
+                             QVBoxLayout, QWidget)
 
 
 STATE_WORKING = "working"
@@ -311,7 +311,7 @@ def get_preset_range(range_key, end_time=None):
 class UsagePlotWidget(QWidget):
     def __init__(self):
         super().__init__()
-        self.setMinimumHeight(320)
+        self.setMinimumHeight(280)
         self.range_start = None
         self.range_end = None
         self.records = []
@@ -421,9 +421,9 @@ class UsagePlotWidget(QWidget):
         left = max(112, max(metrics.horizontalAdvance(label) for label in label_samples) + 18)
         right = 24
         top = 64
-        bottom = 20
-        tick_label_height = 34
-        tick_gap = 12
+        bottom = 44
+        tick_label_height = 44
+        tick_gap = 14
         plot_bottom = max(top + 120, self.height() - bottom)
         plot_bottom = min(plot_bottom, max(top + 1, self.height() - 4))
         tick_y = plot_bottom - tick_label_height
@@ -562,6 +562,8 @@ class UsageQueryWindow(QWidget):
 
         chart_group = QGroupBox("状态曲线")
         chart_layout = QVBoxLayout(chart_group)
+        chart_layout.setContentsMargins(18, 28, 18, 34)
+        chart_layout.setSpacing(10)
 
         chart_settings_row = QHBoxLayout()
         chart_settings_row.addWidget(QLabel("呈现方式:"))
@@ -593,7 +595,8 @@ class UsageQueryWindow(QWidget):
         chart_layout.addLayout(chart_settings_row)
 
         self.plot_widget = UsagePlotWidget()
-        chart_layout.addWidget(self.plot_widget)
+        self.plot_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        chart_layout.addWidget(self.plot_widget, 1)
         root.addWidget(chart_group)
 
     def load_query_settings(self):
