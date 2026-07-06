@@ -362,21 +362,49 @@ class UsagePlotWidget(QWidget):
 
     def draw_time_ticks(self, painter, left, y, width):
         painter.setPen(QPen(QColor(90, 102, 120), 1))
-        tick_count = 6
         total_seconds = (self.range_end - self.range_start).total_seconds()
+        if total_seconds <= 0:
+            return
+
+        max_label_width, label_height = self.get_time_tick_label_size(total_seconds)
+        min_label_gap = max_label_width + 44
+        tick_count = max(1, min(6, int(width // min_label_gap)))
+        label_y = y + 8
+
         for i in range(tick_count + 1):
             ratio = i / tick_count
             x = int(left + ratio * width)
             ts = self.range_start + timedelta(seconds=total_seconds * ratio)
             painter.drawLine(x, y, x, y + 4)
 
-            if total_seconds <= 24 * 3600:
-                text = ts.strftime("%m-%d %H:%M")
-            elif total_seconds <= 31 * 24 * 3600:
-                text = ts.strftime("%m-%d")
-            else:
-                text = ts.strftime("%Y-%m")
-            painter.drawText(x - 30, y + 8, 86, 28, Qt.AlignmentFlag.AlignLeft, text)
+            text = self.format_time_tick(total_seconds, ts)
+            label_width = min(max(1, self.fontMetrics().horizontalAdvance(text) + 4), width)
+            label_x = int(x - label_width / 2)
+            label_x = max(left, min(label_x, left + width - label_width))
+            painter.drawText(
+                label_x,
+                label_y,
+                label_width,
+                label_height,
+                Qt.AlignmentFlag.AlignCenter,
+                text,
+            )
+
+    def get_time_tick_label_size(self, total_seconds):
+        metrics = self.fontMetrics()
+        sample_texts = [
+            self.format_time_tick(total_seconds, self.range_start + timedelta(seconds=total_seconds * i / 6))
+            for i in range(7)
+        ]
+        max_label_width = max(metrics.horizontalAdvance(text) for text in sample_texts) + 4
+        return max_label_width, metrics.height() + 6
+
+    def format_time_tick(self, total_seconds, ts):
+        if total_seconds <= 24 * 3600:
+            return ts.strftime("%m-%d %H:%M")
+        if total_seconds <= 31 * 24 * 3600:
+            return ts.strftime("%m-%d")
+        return ts.strftime("%Y-%m")
 
     def draw_timeline(self, painter):
         left = 64
@@ -419,15 +447,16 @@ class UsagePlotWidget(QWidget):
         ]
         metrics = self.fontMetrics()
         left = max(112, max(metrics.horizontalAdvance(label) for label in label_samples) + 18)
-        right = 24
+        total_seconds = (self.range_end - self.range_start).total_seconds()
+        max_tick_label_width, tick_label_height = self.get_time_tick_label_size(total_seconds)
+        right = max(24, int(max_tick_label_width / 2) + 8)
         top = 64
-        bottom = 44
-        tick_label_height = 44
-        tick_gap = 14
-        plot_bottom = max(top + 120, self.height() - bottom)
-        plot_bottom = min(plot_bottom, max(top + 1, self.height() - 4))
-        tick_y = plot_bottom - tick_label_height
-        data_bottom = tick_y - tick_gap
+        bottom = 14
+        tick_gap = 8
+        label_bottom = max(top + 120 + tick_gap + tick_label_height, self.height() - bottom)
+        label_bottom = min(label_bottom, max(top + tick_gap + tick_label_height + 1, self.height() - 4))
+        tick_y = label_bottom - tick_label_height - tick_gap
+        data_bottom = tick_y
         width = max(1, self.width() - left - right)
         height = max(1, data_bottom - top)
 
@@ -447,10 +476,10 @@ class UsagePlotWidget(QWidget):
 
         self.draw_legend(painter, left, 14)
 
-        painter.fillRect(left, top, width, plot_bottom - top, QColor(255, 255, 255))
+        painter.fillRect(left, top, width, label_bottom - top, QColor(255, 255, 255))
         painter.setPen(QPen(QColor(180, 188, 200), 1))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRect(left, top, width, plot_bottom - top)
+        painter.drawRect(left, top, width, data_bottom - top)
 
         for state_key in STATE_KEYS:
             y = map_y(state_key)

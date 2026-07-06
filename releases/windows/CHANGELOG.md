@@ -1,5 +1,17 @@
 # Windows Installer Changelog
 
+## 2.1.5 - 2026-07-06
+
+- Reworked curve chart time-axis labels so the first and last labels stay inside the chart width.
+- Removed the extra-looking bottom border below time labels by separating the data plot area from the x-axis label area.
+- Reduced the vertical gap below time labels while keeping a safe bottom margin inside the chart widget.
+- Added width checks for curve chart time labels at common query window sizes.
+- Bumped Windows app and installer version to `2.1.5`.
+
+Installer:
+
+- `releases/windows/2.1.5/Triple2EyeProtection-Setup-2.1.5.exe`
+
 ## 2.1.4 - 2026-07-06
 
 - Added explicit bottom padding inside the `状态曲线` group so the chart widget no longer visually covers the group border in full screen.
