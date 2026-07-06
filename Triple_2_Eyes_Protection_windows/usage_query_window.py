@@ -411,7 +411,12 @@ class UsagePlotWidget(QWidget):
         self.draw_time_ticks(painter, left, bar_top + bar_height + 10, width)
 
     def draw_curve(self, painter):
-        left = 72
+        label_samples = [
+            f"{STATE_LABEL_MAP[state_key]} y={self.display_y[state_key]:g}"
+            for state_key in STATE_KEYS
+        ]
+        metrics = self.fontMetrics()
+        left = max(112, max(metrics.horizontalAdvance(label) for label in label_samples) + 18)
         right = 24
         top = 48
         bottom = 58
@@ -431,7 +436,9 @@ class UsagePlotWidget(QWidget):
 
         self.draw_legend(painter, left, 14)
 
+        painter.fillRect(left, top, width, height, QColor(255, 255, 255))
         painter.setPen(QPen(QColor(180, 188, 200), 1))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawRect(left, top, width, height)
 
         for state_key in STATE_KEYS:
@@ -440,7 +447,7 @@ class UsagePlotWidget(QWidget):
             painter.drawLine(left, y, left + width, y)
             painter.setPen(QPen(QColor(90, 102, 120), 1))
             label = f"{STATE_LABEL_MAP[state_key]} y={self.display_y[state_key]:g}"
-            painter.drawText(6, y + 4, label)
+            painter.drawText(4, y - 10, left - 12, 20, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, label)
 
         segments = build_state_segments(self.records, self.range_start, self.range_end)
         previous_y = None

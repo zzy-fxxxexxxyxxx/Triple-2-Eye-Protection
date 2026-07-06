@@ -3,7 +3,7 @@
 ; dist/Triple 2 Eye Protection/
 
 #define MyAppName "Triple 2 Eye Protection"
-#define MyAppVersion "2.1.0"
+#define MyAppVersion "2.1.1"
 #define MyAppPublisher "Triple 2 Team"
 #define MyAppExeName "Triple 2 Eye Protection.exe"
 #define MyAppAssocName MyAppName + " App"

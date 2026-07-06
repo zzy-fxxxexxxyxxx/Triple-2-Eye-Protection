@@ -1,5 +1,16 @@
 # Windows Installer Changelog
 
+## 2.1.1 - 2026-07-06
+
+- Fixed the Windows query curve chart being filled with the gray `未记录` color after drawing the legend.
+- The chart plot area now explicitly uses a white background and resets the painter brush before drawing the border.
+- Improved the curve chart y-axis label layout so labels such as `未记录 y=-0.1` stay outside the plot area.
+- Bumped Windows app and installer version to `2.1.1`.
+
+Installer:
+
+- `releases/windows/2.1.1/Triple2EyeProtection-Setup-2.1.1.exe`
+
 ## 2.1.0 - 2026-07-06
 
 - Added a fourth query state, `未记录`, for offline/locked/unknown periods.
