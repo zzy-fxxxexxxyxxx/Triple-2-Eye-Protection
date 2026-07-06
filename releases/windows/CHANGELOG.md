@@ -1,5 +1,17 @@
 # Windows Installer Changelog
 
+## 2.1.3 - 2026-07-06
+
+- Moved curve chart time ticks into an internal bottom band so they no longer overflow the `状态曲线` area.
+- Reduced the chart widget minimum height to avoid the default query window being forced beyond its visible bounds.
+- Added markers for both segment start and segment end points.
+- Added markers for raw log record points, including same-second state changes that do not create visible duration segments.
+- Bumped Windows app and installer version to `2.1.3`.
+
+Installer:
+
+- `releases/windows/2.1.3/Triple2EyeProtection-Setup-2.1.3.exe`
+
 ## 2.1.2 - 2026-07-06
 
 - Restored gradient transition lines between curve chart states.

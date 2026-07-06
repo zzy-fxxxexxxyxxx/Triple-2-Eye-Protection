@@ -311,7 +311,7 @@ def get_preset_range(range_key, end_time=None):
 class UsagePlotWidget(QWidget):
     def __init__(self):
         super().__init__()
-        self.setMinimumHeight(380)
+        self.setMinimumHeight(320)
         self.range_start = None
         self.range_end = None
         self.records = []
@@ -421,9 +421,15 @@ class UsagePlotWidget(QWidget):
         left = max(112, max(metrics.horizontalAdvance(label) for label in label_samples) + 18)
         right = 24
         top = 64
-        bottom = 82
+        bottom = 20
+        tick_label_height = 34
+        tick_gap = 12
+        plot_bottom = max(top + 120, self.height() - bottom)
+        plot_bottom = min(plot_bottom, max(top + 1, self.height() - 4))
+        tick_y = plot_bottom - tick_label_height
+        data_bottom = tick_y - tick_gap
         width = max(1, self.width() - left - right)
-        height = max(1, self.height() - top - bottom)
+        height = max(1, data_bottom - top)
 
         y_values = list(self.display_y.values())
         y_min_raw = min(y_values)
@@ -441,10 +447,10 @@ class UsagePlotWidget(QWidget):
 
         self.draw_legend(painter, left, 14)
 
-        painter.fillRect(left, top, width, height, QColor(255, 255, 255))
+        painter.fillRect(left, top, width, plot_bottom - top, QColor(255, 255, 255))
         painter.setPen(QPen(QColor(180, 188, 200), 1))
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.drawRect(left, top, width, height)
+        painter.drawRect(left, top, width, plot_bottom - top)
 
         for state_key in STATE_KEYS:
             y = map_y(state_key)
@@ -458,6 +464,7 @@ class UsagePlotWidget(QWidget):
         previous_y = None
         previous_x = None
         previous_state_key = None
+        markers = []
         for seg_start, seg_end, state_key in segments:
             x1 = self.map_x(seg_start, left, width)
             x2 = self.map_x(seg_end, left, width)
@@ -473,14 +480,23 @@ class UsagePlotWidget(QWidget):
 
             painter.setPen(QPen(color, 3, Qt.PenStyle.SolidLine))
             painter.drawLine(x1, y, x2, y)
-            painter.setBrush(color)
-            painter.drawEllipse(x1 - 3, y - 3, 6, 6)
+            markers.append((x1, y, color))
+            markers.append((x2, y, color))
 
             previous_x = x2
             previous_y = y
             previous_state_key = state_key
 
-        self.draw_time_ticks(painter, left, top + height + 10, width)
+        for ts, state_key in self.records:
+            if self.range_start <= ts <= self.range_end:
+                markers.append((self.map_x(ts, left, width), map_y(state_key), STATE_COLOR_MAP[state_key]))
+
+        for x, y, color in markers:
+            painter.setPen(QPen(color.darker(110), 1))
+            painter.setBrush(color)
+            painter.drawEllipse(x - 4, y - 4, 8, 8)
+
+        self.draw_time_ticks(painter, left, tick_y, width)
 
 
 class UsageQueryWindow(QWidget):
