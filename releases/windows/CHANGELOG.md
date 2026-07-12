@@ -1,5 +1,18 @@
 # Windows Installer Changelog
 
+## 2.1.7 - 2026-07-12
+
+- Replaced the glossy gradient/card-heavy main window with a restrained flat desktop-tool layout.
+- Made the main window size responsive to the current screen's available logical resolution instead of using a fixed `430x740` size.
+- Kept the complete panel visible at `420x496` and larger, covering MateBook 14 at 250% Windows scaling.
+- Added an internal vertical scroll fallback for smaller logical screens without horizontal scrolling.
+- Compressed the seven main actions into a stable three-row grid while preserving all existing behavior.
+- Bumped Windows app and installer version to `2.1.7`.
+
+Installer:
+
+- `releases/windows/2.1.7/Triple2EyeProtection-Setup-2.1.7.exe`
+
 ## 2.1.6 - 2026-07-06
 
 - Redesigned the Windows main settings window into a modern control panel with a gradient header, card sections, compact parameter grid, and integrated status/action panel.

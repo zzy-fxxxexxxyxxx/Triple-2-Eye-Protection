@@ -13,8 +13,9 @@ from PyQt6.QtGui import QIcon, QAction
 from PyQt6.QtWidgets import (QApplication, QSystemTrayIcon, QMenu, QWidget,
                              QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QSpinBox, QDoubleSpinBox,
                              QPushButton, QStyle, QFrame, QComboBox, QCheckBox,
-                             QMessageBox, QDialog, QLineEdit, QProgressBar)
-from PyQt6.QtCore import QTimer, Qt
+                             QMessageBox, QDialog, QLineEdit, QProgressBar,
+                             QScrollArea)
+from PyQt6.QtCore import QTimer, Qt, QSize
 
 # --- 假设这些类和函数在其他文件中 ---
 from reminder_window import ReminderWindow
@@ -146,71 +147,92 @@ class EyeCarePro(QWidget):
     def apply_main_window_style(self):
         self.setStyleSheet("""
             QWidget#MainWindow {
-                background: #EEF4F8;
-                color: #142033;
+                background: #F3F5F7;
+                color: #20262D;
                 font-family: "Microsoft YaHei UI", "Segoe UI", Arial;
-                font-size: 14px;
+                font-size: 13px;
             }
-            QFrame#HeroCard {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                                            stop:0 #0F766E, stop:0.58 #14B8A6, stop:1 #7DD3FC);
-                border: 1px solid #B7E7E3;
-                border-radius: 18px;
+            QFrame#HeaderBar {
+                background: #FFFFFF;
+                border: none;
+                border-bottom: 1px solid #DCE1E5;
             }
-            QLabel#HeroTitle {
-                color: #FFFFFF;
-                font-size: 23px;
+            QLabel#AppTitle {
+                color: #1B232B;
+                font-size: 18px;
                 font-weight: 700;
                 letter-spacing: 0px;
             }
-            QLabel#HeroSubtitle {
-                color: #E7FFFB;
-                font-size: 12px;
+            QLabel#AppSubtitle {
+                color: #6F7882;
+                font-size: 11px;
             }
-            QFrame#Card {
-                background: #FFFFFF;
-                border: 1px solid #D8E3EA;
-                border-radius: 14px;
+            QScrollArea {
+                background: transparent;
+                border: none;
             }
-            QLabel#CardTitle {
-                color: #172033;
-                font-size: 16px;
+            QScrollArea > QWidget > QWidget {
+                background: transparent;
+            }
+            QScrollBar:vertical {
+                background: transparent;
+                width: 8px;
+                margin: 2px 0;
+            }
+            QScrollBar::handle:vertical {
+                background: #C7CDD2;
+                border-radius: 4px;
+                min-height: 28px;
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0;
+            }
+            QFrame#StatusPanel {
+                background: #EAF2EF;
+                border: 1px solid #D3E0DB;
+                border-radius: 6px;
+            }
+            QFrame#Section {
+                background: transparent;
+                border: none;
+            }
+            QLabel#SectionTitle {
+                color: #46515B;
+                font-size: 13px;
                 font-weight: 700;
-            }
-            QLabel#CardSubtitle, QLabel#FieldHint {
-                color: #6B7A90;
-                font-size: 12px;
             }
             QLabel#FieldLabel {
-                color: #314155;
-                font-weight: 600;
+                color: #58636D;
+                font-size: 11px;
+                font-weight: 500;
             }
             QLabel#StatusText {
-                color: #0F766E;
-                font-size: 14px;
-                font-weight: 700;
+                color: #315E54;
+                font-size: 12px;
+                font-weight: 600;
             }
             QLabel#CountdownText {
-                color: #102033;
-                font-size: 26px;
-                font-weight: 800;
-            }
-            QLabel#StateBadge {
-                border-radius: 12px;
-                padding: 5px 12px;
+                color: #202B31;
+                font-size: 24px;
                 font-weight: 700;
             }
+            QLabel#StateBadge {
+                border-radius: 4px;
+                padding: 3px 7px;
+                font-size: 11px;
+                font-weight: 600;
+            }
             QSpinBox, QDoubleSpinBox, QComboBox, QLineEdit {
-                background: #F8FBFD;
-                border: 1px solid #CBD8E2;
-                border-radius: 10px;
-                padding: 0 12px;
-                min-height: 34px;
-                color: #102033;
-                selection-background-color: #99F6E4;
+                background: #FFFFFF;
+                border: 1px solid #C9D0D6;
+                border-radius: 4px;
+                padding: 0 9px;
+                min-height: 30px;
+                color: #20262D;
+                selection-background-color: #B9D8D0;
             }
             QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QLineEdit:focus {
-                border: 1px solid #14B8A6;
+                border: 1px solid #477D70;
                 background: #FFFFFF;
             }
             QComboBox::drop-down {
@@ -218,97 +240,90 @@ class EyeCarePro(QWidget):
                 width: 34px;
             }
             QCheckBox {
-                color: #243447;
-                font-weight: 600;
-                spacing: 10px;
+                color: #3C464F;
+                font-weight: 500;
+                spacing: 8px;
             }
             QCheckBox::indicator {
-                width: 20px;
-                height: 20px;
-                border-radius: 6px;
-                border: 1px solid #9FB0C0;
+                width: 16px;
+                height: 16px;
+                border-radius: 3px;
+                border: 1px solid #AAB3BA;
                 background: #FFFFFF;
             }
             QCheckBox::indicator:checked {
-                background: #14B8A6;
-                border: 1px solid #14B8A6;
+                background: #477D70;
+                border: 1px solid #477D70;
             }
             QProgressBar {
-                background: #DBE8EF;
+                background: #D5DFDB;
                 border: none;
-                border-radius: 7px;
-                min-height: 14px;
-                max-height: 14px;
+                border-radius: 2px;
+                min-height: 4px;
+                max-height: 4px;
                 text-align: center;
             }
             QProgressBar::chunk {
-                border-radius: 7px;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                                            stop:0 #14B8A6, stop:1 #38BDF8);
+                border-radius: 2px;
+                background: #477D70;
             }
             QPushButton {
-                background: #F8FBFD;
-                border: 1px solid #D4DEE8;
-                border-radius: 11px;
-                color: #132033;
-                font-weight: 700;
-                min-height: 34px;
+                background: #FFFFFF;
+                border: 1px solid #C9D0D6;
+                border-radius: 5px;
+                color: #303941;
+                font-weight: 600;
+                min-height: 30px;
             }
             QPushButton:hover {
-                background: #EDF7FA;
-                border-color: #A9D8D4;
+                background: #F7F9FA;
+                border-color: #98A3AB;
             }
             QPushButton:pressed {
-                background: #DDF3F0;
+                background: #ECEFF1;
             }
             QPushButton#PrimaryButton {
-                background: #0F766E;
-                border: 1px solid #0F766E;
+                background: #315E54;
+                border: 1px solid #315E54;
                 color: #FFFFFF;
             }
             QPushButton#PrimaryButton:hover {
-                background: #0D9488;
+                background: #284F47;
             }
             QPushButton#WarningButton {
-                background: #FFF2D8;
-                border: 1px solid #F6C76B;
-                color: #9A5A00;
+                background: #FFFFFF;
+                border: 1px solid #CBB78F;
+                color: #7A5A20;
             }
             QPushButton#WarningButton:hover {
-                background: #FFE7B3;
+                background: #FAF7F0;
             }
             QPushButton#SoftButton {
-                background: #EAF6F4;
-                border: 1px solid #BDE4DE;
-                color: #0F766E;
+                background: #F5F7F8;
+                border: 1px solid #C9D0D6;
+                color: #46515B;
             }
             QPushButton#DangerButton {
-                background: #FFF1F2;
-                border: 1px solid #F3B3BA;
-                color: #D11D36;
+                background: transparent;
+                border: 1px solid #D5B7BA;
+                color: #A13B45;
             }
             QPushButton#DangerButton:hover {
-                background: #FFE4E7;
+                background: #FAF1F2;
             }
         """)
 
-    def create_card(self, title, subtitle=None):
-        card = QFrame()
-        card.setObjectName("Card")
-        card_layout = QVBoxLayout(card)
-        card_layout.setContentsMargins(18, 16, 18, 16)
-        card_layout.setSpacing(12)
+    def create_section(self, title):
+        section = QFrame()
+        section.setObjectName("Section")
+        section_layout = QVBoxLayout(section)
+        section_layout.setContentsMargins(0, 0, 0, 0)
+        section_layout.setSpacing(8)
 
         title_label = QLabel(title)
-        title_label.setObjectName("CardTitle")
-        card_layout.addWidget(title_label)
-
-        if subtitle:
-            subtitle_label = QLabel(subtitle)
-            subtitle_label.setObjectName("CardSubtitle")
-            card_layout.addWidget(subtitle_label)
-
-        return card, card_layout
+        title_label.setObjectName("SectionTitle")
+        section_layout.addWidget(title_label)
+        return section, section_layout
 
     def create_compact_field(self, text, widget):
         field = QWidget()
@@ -318,7 +333,7 @@ class EyeCarePro(QWidget):
 
         label = QLabel(text)
         label.setObjectName("FieldLabel")
-        widget.setFixedHeight(36)
+        widget.setFixedHeight(32)
         field_layout.addWidget(label)
         field_layout.addWidget(widget)
         return field
@@ -334,7 +349,7 @@ class EyeCarePro(QWidget):
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         if icon_name:
             button.setIcon(self.get_standard_icon(icon_name))
-            button.setIconSize(button.iconSize())
+            button.setIconSize(QSize(14, 14))
         return button
 
     def update_pause_button_visual(self):
@@ -346,20 +361,20 @@ class EyeCarePro(QWidget):
 
     def set_status_visual_state(self, color):
         color_map = {
-            "green": ("计时中", "#DDF7EF", "#0F766E"),
-            "orange": ("注意", "#FFF2D8", "#A35B00"),
-            "blue": ("暂停", "#E7F0FF", "#2563EB"),
-            "red": ("警示", "#FFE4E7", "#D11D36"),
+            "green": ("计时中", "#DCEAE5", "#315E54"),
+            "orange": ("注意", "#F1E9D9", "#76561E"),
+            "blue": ("暂停", "#E1E8EE", "#405D73"),
+            "red": ("警示", "#F1E1E3", "#963B45"),
         }
         badge_text, badge_bg, badge_fg = color_map.get(color, color_map["green"])
         status_color = badge_fg
         if hasattr(self, "lbl_state_badge"):
             self.lbl_state_badge.setText(badge_text)
             self.lbl_state_badge.setStyleSheet(
-                f"background: {badge_bg}; color: {badge_fg}; border-radius: 12px; padding: 5px 12px; font-weight: 700;"
+                f"background: {badge_bg}; color: {badge_fg}; border-radius: 4px; padding: 3px 7px; font-size: 11px; font-weight: 600;"
             )
         if hasattr(self, "lbl_status"):
-            self.lbl_status.setStyleSheet(f"color: {status_color}; font-size: 14px; font-weight: 700;")
+            self.lbl_status.setStyleSheet(f"color: {status_color}; font-size: 12px; font-weight: 600;")
 
     def restore_running_status(self):
         self.lbl_status.setText("状态: 正在计时...")
@@ -367,13 +382,13 @@ class EyeCarePro(QWidget):
 
     def update_countdown_display(self, remaining_seconds=None):
         if remaining_seconds is None:
-            self.lbl_countdown.setText("剩余提醒时间: --:--")
+            self.lbl_countdown.setText("--:--")
             if hasattr(self, "countdown_progress"):
                 self.countdown_progress.setValue(0)
             return
 
         rem = max(0, int(remaining_seconds))
-        self.lbl_countdown.setText(f"剩余提醒时间: {self.format_countdown(rem)}")
+        self.lbl_countdown.setText(self.format_countdown(rem))
         if hasattr(self, "countdown_progress"):
             total = max(1, int(self.t1_mins * 60))
             progress_value = int(max(0.0, min(1.0, rem / total)) * 1000)
@@ -382,40 +397,98 @@ class EyeCarePro(QWidget):
     def init_ui(self):
         self.set_app_icon()
         self.setWindowTitle("Triple 2 Eye Protection - settings")
-        self.setFixedSize(430, 740)
         self.setObjectName("MainWindow")
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.apply_main_window_style()
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 18, 18, 18)
-        layout.setSpacing(12)
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is not None:
+            available = screen.availableGeometry()
+            target_width = max(320, min(420, available.width() - 32))
+            target_height = max(380, min(560, available.height() - 56))
+        else:
+            target_width, target_height = 420, 520
+        self.setMinimumSize(min(360, target_width), min(420, target_height))
+        self.resize(target_width, target_height)
+        self.setMaximumWidth(520)
 
-        hero = QFrame()
-        hero.setObjectName("HeroCard")
-        hero_layout = QHBoxLayout(hero)
-        hero_layout.setContentsMargins(18, 14, 18, 14)
-        hero_layout.setSpacing(14)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(0, 0, 0, 0)
+        root.setSpacing(0)
+
+        header = QFrame()
+        header.setObjectName("HeaderBar")
+        header.setFixedHeight(54)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(14, 8, 14, 8)
+        header_layout.setSpacing(10)
 
         icon_label = QLabel()
-        icon_label.setPixmap(self.app_icon.pixmap(42, 42))
-        icon_label.setFixedSize(46, 46)
+        icon_label.setPixmap(self.app_icon.pixmap(30, 30))
+        icon_label.setFixedSize(32, 32)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        hero_layout.addWidget(icon_label)
+        header_layout.addWidget(icon_label)
 
-        hero_text_layout = QVBoxLayout()
-        hero_text_layout.setSpacing(3)
-        hero_title = QLabel("Triple 2")
-        hero_title.setObjectName("HeroTitle")
-        hero_subtitle = QLabel("Eye Protection · 护眼计时控制台")
-        hero_subtitle.setObjectName("HeroSubtitle")
-        hero_text_layout.addWidget(hero_title)
-        hero_text_layout.addWidget(hero_subtitle)
-        hero_layout.addLayout(hero_text_layout, 1)
-        layout.addWidget(hero)
+        header_text_layout = QVBoxLayout()
+        header_text_layout.setSpacing(0)
+        app_title = QLabel("Triple 2")
+        app_title.setObjectName("AppTitle")
+        app_subtitle = QLabel("Eye Protection")
+        app_subtitle.setObjectName("AppSubtitle")
+        header_text_layout.addWidget(app_title)
+        header_text_layout.addWidget(app_subtitle)
+        header_layout.addLayout(header_text_layout, 1)
+        root.addWidget(header)
 
-        settings_card, settings_layout = self.create_card("参数配置")
-        settings_layout.setSpacing(10)
+        self.main_scroll = QScrollArea()
+        self.main_scroll.setWidgetResizable(True)
+        self.main_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.main_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.main_scroll.setFrameShape(QFrame.Shape.NoFrame)
+
+        body = QWidget()
+        body.setObjectName("ScrollBody")
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(14, 10, 14, 12)
+        body_layout.setSpacing(12)
+
+        status_panel = QFrame()
+        status_panel.setObjectName("StatusPanel")
+        status_layout = QVBoxLayout(status_panel)
+        status_layout.setContentsMargins(12, 9, 12, 9)
+        status_layout.setSpacing(5)
+
+        status_header = QHBoxLayout()
+        status_header.setSpacing(8)
+        self.lbl_status = QLabel("状态: 正在计时...")
+        self.lbl_status.setObjectName("StatusText")
+        status_header.addWidget(self.lbl_status, 1)
+        self.lbl_state_badge = QLabel("计时中")
+        self.lbl_state_badge.setObjectName("StateBadge")
+        self.lbl_state_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        status_header.addWidget(self.lbl_state_badge)
+        status_layout.addLayout(status_header)
+
+        countdown_row = QHBoxLayout()
+        countdown_row.setSpacing(8)
+        countdown_caption = QLabel("下次提醒")
+        countdown_caption.setObjectName("FieldLabel")
+        countdown_row.addWidget(countdown_caption)
+        countdown_row.addStretch(1)
+        self.lbl_countdown = QLabel("--:--")
+        self.lbl_countdown.setObjectName("CountdownText")
+        self.lbl_countdown.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        countdown_row.addWidget(self.lbl_countdown)
+        status_layout.addLayout(countdown_row)
+
+        self.countdown_progress = QProgressBar()
+        self.countdown_progress.setRange(0, 1000)
+        self.countdown_progress.setTextVisible(False)
+        status_layout.addWidget(self.countdown_progress)
+        self.set_status_visual_state("green")
+        body_layout.addWidget(status_panel)
+
+        settings_section, settings_layout = self.create_section("参数配置")
 
         self.input_t1 = QSpinBox()
         self.input_t1.setRange(1, 300)
@@ -439,23 +512,25 @@ class EyeCarePro(QWidget):
 
         settings_grid = QGridLayout()
         settings_grid.setContentsMargins(0, 0, 0, 0)
-        settings_grid.setHorizontalSpacing(14)
-        settings_grid.setVerticalSpacing(8)
-        settings_grid.addWidget(self.create_compact_field("用眼时长 (min)", self.input_t1), 0, 0)
-        settings_grid.addWidget(self.create_compact_field("默认延时 (min)", self.input_default_delay), 0, 1)
-        settings_grid.addWidget(self.create_compact_field("远望时长 (sec)", self.input_t2), 1, 0)
-        settings_grid.addWidget(self.create_compact_field("过渡时间 (s)", self.input_fade), 1, 1)
+        settings_grid.setHorizontalSpacing(12)
+        settings_grid.setVerticalSpacing(7)
+        settings_grid.setColumnStretch(0, 1)
+        settings_grid.setColumnStretch(1, 1)
+        settings_grid.addWidget(self.create_compact_field("用眼时长 / min", self.input_t1), 0, 0)
+        settings_grid.addWidget(self.create_compact_field("默认延时 / min", self.input_default_delay), 0, 1)
+        settings_grid.addWidget(self.create_compact_field("远望时长 / sec", self.input_t2), 1, 0)
+        settings_grid.addWidget(self.create_compact_field("过渡时间 / s", self.input_fade), 1, 1)
         settings_layout.addLayout(settings_grid)
 
         mode_row = QHBoxLayout()
-        mode_row.setSpacing(12)
+        mode_row.setSpacing(10)
         mode_label = QLabel("提醒方式")
         mode_label.setObjectName("FieldLabel")
-        mode_label.setMinimumWidth(78)
+        mode_label.setMinimumWidth(64)
         self.combo_mode = QComboBox()
         self.combo_mode.addItems(["仅弹窗(静音)", "铃声+弹窗", "闪烁+弹窗（静音）", "铃声+闪烁+弹窗"])
         self.combo_mode.setCurrentIndex(self.remind_mode)
-        self.combo_mode.setFixedHeight(36)
+        self.combo_mode.setFixedHeight(32)
         mode_row.addWidget(mode_label)
         mode_row.addWidget(self.combo_mode, 1)
         settings_layout.addLayout(mode_row)
@@ -463,7 +538,7 @@ class EyeCarePro(QWidget):
         self.check_autostart = QCheckBox("开机自动启动")
         self.check_autostart.setChecked(self.is_autostart_enabled())
         settings_layout.addWidget(self.check_autostart)
-        layout.addWidget(settings_card)
+        body_layout.addWidget(settings_section)
 
         self.input_t1.editingFinished.connect(self.on_parameter_committed)
         self.input_default_delay.editingFinished.connect(self.on_parameter_committed)
@@ -472,69 +547,50 @@ class EyeCarePro(QWidget):
         self.combo_mode.currentIndexChanged.connect(self.on_parameter_committed)
         self.check_autostart.stateChanged.connect(self.toggle_autostart)
 
-        control_card, control_layout = self.create_card("当前状态")
-        control_layout.setSpacing(10)
-        status_header = QHBoxLayout()
-        status_header.setSpacing(10)
-        self.lbl_status = QLabel("状态: 正在计时...")
-        self.lbl_status.setObjectName("StatusText")
-        status_header.addWidget(self.lbl_status, 1)
-        self.lbl_state_badge = QLabel("计时中")
-        self.lbl_state_badge.setObjectName("StateBadge")
-        self.lbl_state_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        status_header.addWidget(self.lbl_state_badge)
-        control_layout.addLayout(status_header)
+        actions_section, actions_layout = self.create_section("快捷操作")
+        actions_grid = QGridLayout()
+        actions_grid.setContentsMargins(0, 0, 0, 0)
+        actions_grid.setHorizontalSpacing(8)
+        actions_grid.setVerticalSpacing(7)
+        for column in range(3):
+            actions_grid.setColumnStretch(column, 1)
 
-        self.lbl_countdown = QLabel("剩余提醒时间: --:--")
-        self.lbl_countdown.setObjectName("CountdownText")
-        self.lbl_countdown.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        control_layout.addWidget(self.lbl_countdown)
-
-        self.countdown_progress = QProgressBar()
-        self.countdown_progress.setRange(0, 1000)
-        self.countdown_progress.setTextVisible(False)
-        control_layout.addWidget(self.countdown_progress)
-        self.set_status_visual_state("green")
-
-        action_row_1 = QHBoxLayout()
-        action_row_1.setSpacing(12)
-        self.btn_pause_resume = self.create_action_button("暂停", height=38, icon_name="SP_MediaPause")
+        self.btn_pause_resume = self.create_action_button("暂停", height=32, icon_name="SP_MediaPause")
         self.btn_pause_resume.clicked.connect(self.toggle_pause_resume)
-        action_row_1.addWidget(self.btn_pause_resume)
+        actions_grid.addWidget(self.btn_pause_resume, 0, 0)
 
-        btn_reset = self.create_action_button("重置", height=38, icon_name="SP_BrowserReload")
+        btn_reset = self.create_action_button("重置", height=32, icon_name="SP_BrowserReload")
         btn_reset.clicked.connect(self.reset_countdown)
-        action_row_1.addWidget(btn_reset)
-        control_layout.addLayout(action_row_1)
+        actions_grid.addWidget(btn_reset, 0, 1)
 
-        action_row_2 = QHBoxLayout()
-        action_row_2.setSpacing(12)
-        btn_start_rest_now = self.create_action_button("开始休息", "PrimaryButton", 38, "SP_DialogApplyButton")
+        btn_start_rest_now = self.create_action_button("开始休息", "PrimaryButton", 32, "SP_DialogApplyButton")
         btn_start_rest_now.clicked.connect(self.start_rest_now)
-        action_row_2.addWidget(btn_start_rest_now)
+        actions_grid.addWidget(btn_start_rest_now, 0, 2)
 
-        btn_delay = self.create_action_button("延时", "WarningButton", 38, "SP_MessageBoxWarning")
+        btn_delay = self.create_action_button("延时", "WarningButton", 32, "SP_MessageBoxWarning")
         btn_delay.clicked.connect(self.show_delay_dialog)
-        action_row_2.addWidget(btn_delay)
-        control_layout.addLayout(action_row_2)
+        actions_grid.addWidget(btn_delay, 1, 0)
 
-        action_row_3 = QHBoxLayout()
-        action_row_3.setSpacing(12)
-        btn_query = self.create_action_button("查询记录", height=38, icon_name="SP_FileDialogDetailedView")
+        btn_query = self.create_action_button("查询记录", height=32, icon_name="SP_FileDialogDetailedView")
         btn_query.clicked.connect(self.open_query_window)
-        action_row_3.addWidget(btn_query)
+        actions_grid.addWidget(btn_query, 1, 1)
 
-        btn_hide = self.create_action_button("后台运行", "SoftButton", 38, "SP_TitleBarMinButton")
+        btn_hide = self.create_action_button("后台运行", "SoftButton", 32, "SP_TitleBarMinButton")
         btn_hide.clicked.connect(self.hide_to_tray)
-        action_row_3.addWidget(btn_hide)
-        control_layout.addLayout(action_row_3)
+        actions_grid.addWidget(btn_hide, 1, 2)
 
-        btn_quit = self.create_action_button("彻底退出程序", "DangerButton", 38, "SP_DialogCloseButton")
+        btn_quit = self.create_action_button("彻底退出程序", "DangerButton", 32, "SP_DialogCloseButton")
         btn_quit.clicked.connect(self.confirm_quit)
-        control_layout.addWidget(btn_quit)
-        layout.addWidget(control_card)
+        actions_grid.addWidget(btn_quit, 2, 0, 1, 3)
+        actions_layout.addLayout(actions_grid)
+        body_layout.addWidget(actions_section)
+        body_layout.addStretch(1)
+
+        self.main_scroll.setWidget(body)
+        root.addWidget(self.main_scroll, 1)
 
         self.update_countdown_label()
+
     def set_app_icon(self):
         icon_path = get_resource_path("eye_icon.ico")
         if os.path.exists(icon_path):

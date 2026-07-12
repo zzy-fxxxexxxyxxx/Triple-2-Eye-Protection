@@ -8,7 +8,7 @@
 
 | 平台 | 版本 | 技术栈 | 构建方式 |
 | --- | --- | --- | --- |
-| Windows | `2.1.6` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
+| Windows | `2.1.7` | Python 3.10 · PyQt6 · pywin32 · PyInstaller · Inno Setup | 本地 PyInstaller |
 | Android | `0.1.9` | Java · Android SDK · Gradle | 本地 Gradle |
 | iOS | `0.1.0` | Swift 5.9 · SwiftUI · ActivityKit · WidgetKit · Swift Charts | GitHub Actions (macOS runner) |
 
@@ -177,6 +177,7 @@ APK 生成在 `app/build/outputs/apk/release/`。当前 release 使用 debug 签
 
 ## 实现文档
 
+- [Windows 2.1.7 主界面高 DPI 自适应重构](docs/windows-2.1.7-main-window-high-dpi-redesign.md)
 - [Windows 2.1.6 主界面现代化改造](docs/windows-2.1.6-main-window-modernization.md)
 - [Windows 2.1.5 查询页时间轴标签修复](docs/windows-2.1.5-usage-query-time-axis.md)
 - [Windows 2.1.4 查询页全屏边界修复](docs/windows-2.1.4-usage-query-fullscreen-bounds.md)
