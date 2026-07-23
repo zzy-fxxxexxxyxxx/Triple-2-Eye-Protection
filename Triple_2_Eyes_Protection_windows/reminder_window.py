@@ -12,27 +12,30 @@ class InlineDelayButton(QFrame):
     clicked = pyqtSignal()
     value_changed = pyqtSignal(int)
 
-    def __init__(self, value):
+    def __init__(self, value, width=140, show_prefix=True):
         super().__init__()
         self.setObjectName("DelayButton")
-        self.setFixedSize(140, 40)
+        self.setFixedSize(width, 40)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet(self.style_for("#D64545", "#C93636"))
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 0, 8, 0)
+        layout.setContentsMargins(6, 0, 6, 0)
         layout.setSpacing(0)
 
-        label_prefix = QLabel("延时：")
-        label_prefix.setObjectName("DelayButtonLabel")
-        label_prefix.setFixedWidth(42)
-        label_prefix.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        label_prefix.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        if show_prefix:
+            label_prefix = QLabel("延时：")
+            label_prefix.setObjectName("DelayButtonLabel")
+            label_prefix.setFixedWidth(42)
+            label_prefix.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            label_prefix.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        else:
+            label_prefix = None
 
         self.spin = QSpinBox()
         self.spin.setRange(1, 300)
         self.spin.setValue(value)
-        self.spin.setFixedWidth(42)
+        self.spin.setFixedWidth(38)
         self.spin.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spin.setButtonSymbols(QSpinBox.ButtonSymbols.NoButtons)
         self.spin.valueChanged.connect(self.value_changed)
@@ -45,7 +48,8 @@ class InlineDelayButton(QFrame):
         label_suffix.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
 
         layout.addStretch()
-        layout.addWidget(label_prefix)
+        if label_prefix is not None:
+            layout.addWidget(label_prefix)
         layout.addWidget(self.spin)
         layout.addWidget(label_suffix)
         layout.addStretch()
@@ -211,8 +215,17 @@ class ReminderWindow(QWidget):
         # 4. 按钮布局
         v_box = QVBoxLayout()
         v_box.setSpacing(10)
-        self.delay_button = InlineDelayButton(self.default_delay_mins)
-        self.delay_button.clicked.connect(self.on_delay_requested)
+        delay_row = QHBoxLayout()
+        delay_row.setSpacing(6)
+        delay_row.addStretch()
+        delay_presets = [self.default_delay_mins, 20, 30]
+        self.delay_buttons = []
+        for delay_mins in delay_presets:
+            delay_button = InlineDelayButton(delay_mins, width=130, show_prefix=True)
+            delay_button.clicked.connect(lambda _checked=False, button=delay_button: self.on_delay_requested(button))
+            delay_row.addWidget(delay_button)
+            self.delay_buttons.append(delay_button)
+        delay_row.addStretch()
 
         # 新增：开始休息按钮
         self.btn_start_rest = QPushButton("开始休息")
@@ -226,7 +239,7 @@ class ReminderWindow(QWidget):
         # layout.addWidget(self.btn_done)
 
         v_box.addStretch()
-        v_box.addWidget(self.delay_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        v_box.addLayout(delay_row)
         v_box.addWidget(self.btn_start_rest, alignment=Qt.AlignmentFlag.AlignCenter)
         v_box.addWidget(self.btn_done, alignment=Qt.AlignmentFlag.AlignCenter)
         v_box.addStretch()
@@ -285,12 +298,13 @@ class ReminderWindow(QWidget):
         self.update_eye_usage_label()
         self.is_resting = True
         self.btn_start_rest.setEnabled(False)
-        self.delay_button.setEnabled(False)
+        for delay_button in self.delay_buttons:
+            delay_button.setEnabled(False)
         self.rest_started.emit()
 
-    def on_delay_requested(self):
+    def on_delay_requested(self, delay_button):
         """本次弹窗临时延时，不修改主界面的默认延时配置。"""
-        self.delay_requested.emit(self.delay_button.value())
+        self.delay_requested.emit(delay_button.value())
         self.close()
 
     def start_rest_immediately(self):

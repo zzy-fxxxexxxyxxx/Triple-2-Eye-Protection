@@ -1,5 +1,17 @@
 # Windows Installer Changelog
 
+## 2.1.8 - 2026-07-23
+
+- Replaced the single reminder-popup delay control with three red delay buttons in the first button row.
+- The three delay buttons default to the main default delay value, `20` minutes, and `30` minutes, so a fresh install shows `10/20/30`.
+- Kept each delay value editable inside its own button for the current popup only.
+- Preserved the existing delay behavior: clicking a delay button closes the reminder, continues eye use, and does not reset the accumulated `已用眼` time.
+- Bumped Windows app and installer version to `2.1.8`.
+
+Installer:
+
+- `releases/windows/2.1.8/Triple2EyeProtection-Setup-2.1.8.exe`
+
 ## 2.1.7 - 2026-07-12
 
 - Replaced the glossy gradient/card-heavy main window with a restrained flat desktop-tool layout.
